@@ -1,3 +1,5 @@
+# PdfTurtle Playground
+A frontend for [PdfTurtle](https://github.com/lucas-gaitzsch/pdf-turtle).
 # PdfTurtle 🐢 HTML to PDF generation service
 
 [![build and test](https://github.com/lucas-gaitzsch/pdf-turtle/actions/workflows/pipeline.yml/badge.svg)](https://github.com/lucas-gaitzsch/pdf-turtle/actions/workflows/pipeline.yml)
@@ -32,6 +34,11 @@ Try it! Here's a [**DEMO**\_\_🐢\_\_](https://pdfturtle.gaitzsch.dev/).
 
 ## 💥 How to run the service
 
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=lucas-gaitzsch_pdf-turtle-playground&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=lucas-gaitzsch_pdf-turtle-playground)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=lucas-gaitzsch_pdf-turtle-playground&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=lucas-gaitzsch_pdf-turtle-playground)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=lucas-gaitzsch_pdf-turtle-playground&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=lucas-gaitzsch_pdf-turtle-playground)
+
+## Recommended IDE Setup
 ### With docker container (recommended)
 
 The container image is available on [Docker Hub](https://hub.docker.com/r/lucasgaitzsch/pdf-turtle).
