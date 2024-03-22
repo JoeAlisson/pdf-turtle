@@ -21,3 +21,17 @@ go.work
 
 chromium-data-dir
 coverage
+
+.git/
+.vscode/
+.idea/
+.github/
+node_modules/
+
+LICENSE
+README.md
+README_DEV.md
+sonar-project.properties
+.gitignore
+.gitmodules
+codecov.yml
