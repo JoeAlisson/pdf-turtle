@@ -1,24 +1,26 @@
-FROM golang:bullseye as build-service
+FROM golang:alpine3.19 AS build-service
 WORKDIR /build
+
+COPY go.mod go.sum ./
+RUN go mod download
+
 COPY . .
 RUN go build -o pdf-turtle
 
 
-FROM node:lts as build-playground
+FROM node:21.7.1-alpine3.19 AS build-playground
 WORKDIR /app
-COPY .pdf-turtle-playground/. .
-RUN npm i
+COPY .pdf-turtle-playground/package*.json ./
+RUN npm ci --ignore-scripts
+
+COPY .pdf-turtle-playground/ ./
 RUN npm run build
 
 
-FROM chromedp/headless-shell:latest as runtime
+FROM chromedp/headless-shell:116.0.5845.14 AS runtime
 WORKDIR /app
-COPY --from=build-service /build/pdf-turtle /app/pdf-turtle
-COPY --from=build-playground /app/dist /app/static-files/extern/playground
 
-RUN apt-get -y update
-RUN apt-get -y install ca-certificates fonts-open-sans fonts-roboto fonts-noto-color-emoji
-RUN apt-get clean
+RUN apt update && apt install -y ca-certificates fonts-open-sans fonts-roboto fonts-noto-color-emoji && apt clean
 RUN rm -rf /var/lib/apt/lists/*
 
 ENV LANG en-US.UTF-8
@@ -29,5 +31,8 @@ ENV PORT 8000
 ENV SERVE_PLAYGROUND true
 
 EXPOSE ${PORT}
+
+COPY --from=build-service /build/pdf-turtle /app/pdf-turtle
+COPY --from=build-playground /app/dist /app/static-files/extern/playground
 
 ENTRYPOINT ["/app/pdf-turtle"]
