@@ -45,15 +45,15 @@ func (s *Server) Serve(ctx context.Context) {
 		WriteTimeout: 45 * time.Second,
 		ReadTimeout:  45 * time.Second,
 		IdleTimeout:  60 * time.Second,
-		BodyLimit: conf.MaxBodySizeInMb * 1024 * 1024,
-    })
+		BodyLimit:    conf.MaxBodySizeInMb * 1024 * 1024,
+	})
 
 	app.Use(
 		cors.New(cors.Config{
-			AllowOrigins: "*",
-			AllowHeaders:  "*",
-			AllowMethods: strings.Join([]string{http.MethodGet, http.MethodPost}, ","),
-			AllowCredentials: true,
+			AllowOrigins:     "*",
+			AllowHeaders:     "*",
+			AllowMethods:     strings.Join([]string{http.MethodGet, http.MethodPost}, ","),
+			AllowCredentials: false,
 		}),
 		recover.New(),
 		serverutils.ProvideUserCtxMiddleware(ctx),
@@ -136,9 +136,9 @@ func servePlaygroundFronted(app *fiber.App) {
 		return ctx.SendFile(config.PathStaticExternPlayground + ctx.Path())
 	})
 	app.Get("/favicon.ico", func(ctx *fiber.Ctx) error {
-		return ctx.SendFile(config.PathStaticExternPlayground+"favicon.ico")
+		return ctx.SendFile(config.PathStaticExternPlayground + "favicon.ico")
 	})
 	app.Get("/*", func(ctx *fiber.Ctx) error {
-		return ctx.SendFile(config.PathStaticExternPlayground+"index.html")
+		return ctx.SendFile(config.PathStaticExternPlayground + "index.html")
 	})
 }
