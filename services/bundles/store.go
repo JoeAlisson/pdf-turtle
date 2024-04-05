@@ -41,7 +41,7 @@ type MinioStore struct {
 }
 
 func (m MinioStore) Save(ctx context.Context, info BundleInfo) (uuid.UUID, error) {
-	id := uuid.New()
+	id := parseId(info.Id)
 	opt := minio.PutObjectOptions{
 		ContentType: info.ContentType,
 		UserMetadata: map[string]string{
@@ -58,6 +58,13 @@ func (m MinioStore) Save(ctx context.Context, info BundleInfo) (uuid.UUID, error
 		return uuid.Nil, err
 	}
 	return id, nil
+}
+
+func parseId(id string) uuid.UUID {
+	if r, err := uuid.Parse(id); err == nil {
+		return r
+	}
+	return uuid.New()
 }
 
 func (m MinioStore) DeleteFromStore(ctx context.Context, id uuid.UUID) error {
