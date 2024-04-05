@@ -24,6 +24,13 @@ type Config struct {
 	PreloadedAssets []string `arg:"env" help:"Preload assets on startup. Example:'bar.js:https://foo.com/bar.js'"` //TODO:!
 
 	LoopbackPort int `arg:"env" default:"8001" help:"Loopback-Server port"`
+
+	S3Endpoint  string `arg:"--s3-endpoint,env:S3_ENDPOINT" default:"" help:"S3 endpoint"`
+	S3AccessKey string `arg:"--s3-accessKey,env:S3_ACCESS_KEY" default:"" help:"S3 access key"`
+	S3SecretKey string `arg:"--s3-secretKey,env:S3_SECRET_KEY" default:"" help:"S3 secret key"`
+	S3Bucket    string `arg:"--s3-bucket,env:S3_BUCKET" default:"" help:"S3 bucket"`
+	S3Region    string `arg:"--s3-region,env:S3_REGION" default:"us-east-1" help:"S3 region"`
+	S3Secure    bool   `arg:"--s3-secure,env:S3_SECURE" default:"true" help:"S3 secure"`
 }
 
 func ContextWithConfig(parentCtx context.Context, config Config) context.Context {

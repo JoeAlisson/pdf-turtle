@@ -7,7 +7,7 @@ import (
 )
 
 func TestProvide(t *testing.T) {
-	bps := NewBundleProviderService()
+	bps := NewBundleProviderService(nil)
 	id, cleanup := bps.Provide(&Bundle{})
 
 	if _, ok := bps.bundles[id]; !ok {
@@ -22,7 +22,7 @@ func TestProvide(t *testing.T) {
 }
 
 func TestRemove(t *testing.T) {
-	bps := NewBundleProviderService()
+	bps := NewBundleProviderService(nil)
 
 	id := uuid.New()
 	bps.bundles[id] = &Bundle{}
@@ -35,7 +35,7 @@ func TestRemove(t *testing.T) {
 }
 
 func TestGetById(t *testing.T) {
-	bps := NewBundleProviderService()
+	bps := NewBundleProviderService(nil)
 
 	b := &Bundle{
 		files: make(map[string]Opener),

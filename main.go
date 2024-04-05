@@ -36,7 +36,17 @@ func initServicesCtx(ctx context.Context) context.Context {
 	assetsProviderService := assetsprovider.NewAssetsProviderService()
 	servicesCtx = context.WithValue(servicesCtx, config.ContextKeyAssetsProviderService, assetsProviderService)
 
-	bundleProviderService := bundles.NewBundleProviderService()
+	c := config.Get(ctx)
+
+	bStore, _ := bundles.NewMinioStore(bundles.MinioOptions{
+		Endpoint:  c.S3Endpoint,
+		AccessKey: c.S3AccessKey,
+		SecretKey: c.S3SecretKey,
+		Bucket:    c.S3Bucket,
+		Region:    c.S3Region,
+		UseSSL:    c.S3Secure,
+	})
+	bundleProviderService := bundles.NewBundleProviderService(bStore)
 	servicesCtx = context.WithValue(servicesCtx, config.ContextKeyBundleProviderService, bundleProviderService)
 
 	return servicesCtx

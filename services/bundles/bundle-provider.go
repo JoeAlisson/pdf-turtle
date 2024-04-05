@@ -1,6 +1,8 @@
 package bundles
 
 import (
+	"context"
+	"io"
 	"sync"
 
 	"github.com/google/uuid"
@@ -8,9 +10,26 @@ import (
 
 type CleanupFunc = func()
 
-func NewBundleProviderService() *BundleProviderService {
+type BundleInfo struct {
+	Id             string
+	Name           string
+	TemplateEngine string
+	Data           io.ReadCloser
+	Size           int64
+	ContentType    string
+	FileName       string
+}
+
+type Store interface {
+	Save(ctx context.Context, info BundleInfo) (uuid.UUID, error)
+	DeleteFromStore(ctx context.Context, id uuid.UUID) error
+	GetFromStore(ctx context.Context, id uuid.UUID) (BundleInfo, error)
+}
+
+func NewBundleProviderService(s Store) *BundleProviderService {
 	bps := &BundleProviderService{
 		bundles: make(map[uuid.UUID]*Bundle),
+		Store:   s,
 	}
 	return bps
 }
@@ -18,6 +37,7 @@ func NewBundleProviderService() *BundleProviderService {
 type BundleProviderService struct {
 	bundles map[uuid.UUID]*Bundle
 	lock    sync.RWMutex
+	Store   Store
 }
 
 func (bps *BundleProviderService) Provide(bundle *Bundle) (id uuid.UUID, cleanup CleanupFunc) {
@@ -52,4 +72,16 @@ func (bps *BundleProviderService) GetById(id uuid.UUID) (BundleReader, bool) {
 	b, ok := bps.bundles[id]
 
 	return b, ok
+}
+
+func (bps *BundleProviderService) Save(ctx context.Context, info BundleInfo) (uuid.UUID, error) {
+	return bps.Store.Save(ctx, info)
+}
+
+func (bps *BundleProviderService) DeleteFromStore(ctx context.Context, id uuid.UUID) error {
+	return bps.Store.DeleteFromStore(ctx, id)
+}
+
+func (bps *BundleProviderService) GetFromStore(ctx context.Context, id uuid.UUID) (BundleInfo, error) {
+	return bps.Store.GetFromStore(ctx, id)
 }

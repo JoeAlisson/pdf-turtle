@@ -88,6 +88,9 @@ func (s *Server) Serve(ctx context.Context) {
 	api.Post("/pdf/from/html-bundle/render", handlers.RenderBundleHandler).
 		Name("Render PDF from HTML-Bundle")
 
+	api.Post("/html-bundle/save", handlers.SaveHtmlBundleHandler).
+		Name("Save HTML-Bundle")
+
 	if conf.Secret != "" {
 		api.Use(serverutils.SecretMiddleware(conf.Secret))
 	}
