@@ -14,6 +14,7 @@ require (
 	github.com/gofiber/contrib/v3/swaggo v1.0.6
 	github.com/gofiber/fiber/v3 v3.2.0
 	github.com/google/uuid v1.6.0
+	github.com/minio/minio-go/v7 v7.0.69
 	github.com/rs/zerolog v1.35.1
 	github.com/swaggo/swag v1.16.6
 	golang.org/x/net v0.54.0
