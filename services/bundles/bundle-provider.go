@@ -10,20 +10,25 @@ import (
 
 type CleanupFunc = func()
 
+type BundleInfoList struct {
+	Items []BundleInfo
+}
+
 type BundleInfo struct {
-	Id             string
-	Name           string
-	TemplateEngine string
-	Data           io.ReadCloser
-	Size           int64
-	ContentType    string
-	FileName       string
+	Id             string        `json:"id,omitempty"`
+	Name           string        `json:"name,omitempty"`
+	TemplateEngine string        `json:"templateEngine,omitempty"`
+	Data           io.ReadCloser `json:"data,omitempty"`
+	Size           int64         `json:"size,omitempty"`
+	ContentType    string        `json:"contentType,omitempty"`
+	FileName       string        `json:"fileName,omitempty"`
 }
 
 type Store interface {
 	Save(ctx context.Context, info BundleInfo) (uuid.UUID, error)
-	DeleteFromStore(ctx context.Context, id uuid.UUID) error
-	GetFromStore(ctx context.Context, id uuid.UUID) (BundleInfo, error)
+	Delete(ctx context.Context, id uuid.UUID) error
+	Get(ctx context.Context, id uuid.UUID) (BundleInfo, error)
+	ListInfo(ctx context.Context) (BundleInfoList, error)
 }
 
 func NewBundleProviderService(s Store) *BundleProviderService {
@@ -79,9 +84,13 @@ func (bps *BundleProviderService) Save(ctx context.Context, info BundleInfo) (uu
 }
 
 func (bps *BundleProviderService) DeleteFromStore(ctx context.Context, id uuid.UUID) error {
-	return bps.Store.DeleteFromStore(ctx, id)
+	return bps.Store.Delete(ctx, id)
 }
 
 func (bps *BundleProviderService) GetFromStore(ctx context.Context, id uuid.UUID) (BundleInfo, error) {
-	return bps.Store.GetFromStore(ctx, id)
+	return bps.Store.Get(ctx, id)
+}
+
+func (bps *BundleProviderService) ListInfoFromStore(ctx context.Context) (BundleInfoList, error) {
+	return bps.Store.ListInfo(ctx)
 }

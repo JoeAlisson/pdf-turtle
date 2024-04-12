@@ -4,9 +4,10 @@ import (
 	"context"
 	"io"
 
-	"github.com/google/uuid"
 	"github.com/lucas-gaitzsch/pdf-turtle/models"
 	"github.com/lucas-gaitzsch/pdf-turtle/services/bundles"
+
+	"github.com/google/uuid"
 )
 
 type AssetsProviderService interface {
@@ -21,6 +22,7 @@ type BundleProviderService interface {
 	Save(ctx context.Context, info bundles.BundleInfo) (uuid.UUID, error)
 	DeleteFromStore(ctx context.Context, id uuid.UUID) error
 	GetFromStore(ctx context.Context, id uuid.UUID) (bundles.BundleInfo, error)
+	ListInfoFromStore(ctx context.Context) (bundles.BundleInfoList, error)
 }
 
 type RendererBackgroundService interface {
