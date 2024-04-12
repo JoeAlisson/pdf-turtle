@@ -91,6 +91,9 @@ func (s *Server) Serve(ctx context.Context) {
 	api.Post("/html-bundle/save", handlers.SaveHtmlBundleHandler).
 		Name("Save HTML-Bundle")
 
+	api.Get("/html-bundle/:id", handlers.GetHtmlBundleHandler).
+		Name("Get HTML-Bundle")
+
 	if conf.Secret != "" {
 		api.Use(serverutils.SecretMiddleware(conf.Secret))
 	}

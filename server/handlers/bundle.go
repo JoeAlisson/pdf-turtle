@@ -2,15 +2,15 @@ package handlers
 
 import (
 	"errors"
-	"math/rand/v2"
-	"strconv"
-	"time"
-
+	"fmt"
+	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/lucas-gaitzsch/pdf-turtle/config"
 	"github.com/lucas-gaitzsch/pdf-turtle/services"
 	"github.com/lucas-gaitzsch/pdf-turtle/services/bundles"
-
-	"github.com/gofiber/fiber/v2"
+	"io"
+	"mime/multipart"
+	"net/textproto"
 )
 
 // SaveHtmlBundleHandler godoc
@@ -50,8 +50,8 @@ func SaveHtmlBundleHandler(c *fiber.Ctx) error {
 	}
 
 	templateEngine, _ := getValueFromForm(form.Value, formDataKeyTemplateEngine)
-	name, ok := getValueFromForm(form.Value, "name")
-	bundleId, _ := getValueFromForm(form.Value, "id")
+	name, ok := getValueFromForm(form.Value, formDataKeyName)
+	bundleId, _ := getValueFromForm(form.Value, formDataKeyId)
 	if !ok {
 		name = "template-" + randString()
 	}
@@ -73,6 +73,52 @@ func SaveHtmlBundleHandler(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"id": id})
 }
 
-func randString() string {
-	return strconv.FormatInt(rand.Int64(), 32) + "-" + time.Now().Truncate(time.Hour).String()
+func GetHtmlBundleHandler(c *fiber.Ctx) error {
+	ctx := c.UserContext()
+	bundleProvider, ok := ctx.Value(config.ContextKeyBundleProviderService).(services.BundleProviderService)
+	if !ok {
+		return errors.New("bundle provider service not found in context")
+	}
+
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return err
+	}
+
+	info, err := bundleProvider.GetFromStore(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	w := multipart.NewWriter(c)
+	defer w.Close()
+
+	c.Set(fiber.HeaderContentType, w.FormDataContentType())
+
+	h := make(textproto.MIMEHeader)
+	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`,
+		escapeQuotes(formDataKeyBundle), escapeQuotes(info.FileName)))
+	h.Set("Content-Type", info.ContentType)
+
+	ff, err := w.CreatePart(h)
+	if err != nil {
+		return err
+	}
+
+	if _, err = io.Copy(ff, info.Data); err != nil {
+		return err
+	}
+
+	if err = w.WriteField(formDataKeyName, info.Name); err != nil {
+		return err
+	}
+
+	if err = w.WriteField(formDataKeyId, info.Id); err != nil {
+		return err
+	}
+
+	if err = w.WriteField(formDataKeyTemplateEngine, info.TemplateEngine); err != nil {
+		return err
+	}
+	return nil
 }

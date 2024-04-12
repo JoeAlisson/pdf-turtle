@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"mime/multipart"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -14,6 +15,8 @@ const (
 	formDataKeyBundle         = "bundle"
 	formDataKeyModel          = "model"
 	formDataKeyTemplateEngine = "templateEngine"
+	formDataKeyName           = "name"
+	formDataKeyId             = "id"
 )
 
 // RenderBundleHandler godoc
@@ -40,28 +43,9 @@ func RenderBundleHandler(c *fiber.Ctx) error {
 		return errors.New("no bundle data with key 'bundle' was attached in form data")
 	}
 
-	bundle := &bundles.Bundle{}
-
-	for _, fb := range bundlesFromForm {
-
-		if strings.HasPrefix(fb.Filename, "bundle") || fb.Header.Get("Content-Type") == "application/zip" || strings.HasSuffix(fb.Filename, ".zip") {
-			reader, err := fb.Open()
-			if err != nil {
-				return err
-			}
-			defer reader.Close()
-
-			err = bundle.ReadFromZip(reader, fb.Size)
-
-			if err != nil {
-				return err
-			}
-		} else {
-			fp := &bundles.OpenerFileProxy{
-				MultipartFileOpener: fb,
-			}
-			bundle.AddFile(fb.Filename, fp)
-		}
+	bundle, err := createBundle(bundlesFromForm)
+	if err != nil {
+		return err
 	}
 
 	err = bundle.TestIndexFile()
@@ -81,4 +65,31 @@ func RenderBundleHandler(c *fiber.Ctx) error {
 	}
 
 	return writePdf(c, pdfData)
+}
+
+func createBundle(bundlesFromForm []*multipart.FileHeader) (*bundles.Bundle, error) {
+	bundle := &bundles.Bundle{}
+
+	for _, fb := range bundlesFromForm {
+
+		if strings.HasPrefix(fb.Filename, "bundle") || fb.Header.Get("Content-Type") == "application/zip" || strings.HasSuffix(fb.Filename, ".zip") {
+			reader, err := fb.Open()
+			if err != nil {
+				return nil, err
+			}
+			defer reader.Close()
+
+			err = bundle.ReadFromZip(reader, fb.Size)
+
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			fp := &bundles.OpenerFileProxy{
+				MultipartFileOpener: fb,
+			}
+			bundle.AddFile(fb.Filename, fp)
+		}
+	}
+	return bundle, nil
 }

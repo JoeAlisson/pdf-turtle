@@ -4,15 +4,25 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"math/rand/v2"
 	"net/http"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
 )
 
+var quoteEscaper = strings.NewReplacer("\\", "\\\\", `"`, "\\\"")
+
+func escapeQuotes(s string) string {
+	return quoteEscaper.Replace(s)
+}
+
 func writePdf(c *fiber.Ctx, data io.Reader) error {
-	ctx:=c.UserContext()
-	
+	ctx := c.UserContext()
+
 	if data == nil {
 		log.Ctx(ctx).Info().Msg("nothing to writeout: pdf data empty")
 		return c.SendStatus(http.StatusNoContent)
@@ -50,4 +60,8 @@ func getValueFromForm(formValues map[string][]string, key string) (string, bool)
 	}
 
 	return vals[0], true
+}
+
+func randString() string {
+	return strconv.FormatInt(rand.Int64(), 32) + "-" + time.Now().Truncate(time.Hour).String()
 }
