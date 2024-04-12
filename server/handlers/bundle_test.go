@@ -7,10 +7,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	"io"
+	"mime"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/lucas-gaitzsch/pdf-turtle/config"
@@ -27,12 +31,35 @@ type fileList []struct {
 
 func TestSaveHtmlBundleHandler(t *testing.T) {
 	ctx := context.Background()
-	// TODO use var envs
+	endpoint := getEnvOrDefault("S3_ENDPOINT", "localhost:9000")
+	accessKey := getEnvOrDefault("S3_ACCESS_KEY", "minio")
+	secretKey := getEnvOrDefault("S3_SECRET_KEY", "minio123")
+	bucketName := "test-save-html-bundle"
+
+	mc, err := minio.New(endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
+		Secure: false,
+	})
+	if err != nil {
+		t.Fatalf("error creating minio client: %v", err)
+	}
+
+	exists, err := mc.BucketExists(ctx, bucketName)
+	if err != nil {
+		t.Fatalf("error checking bucket: %v", err)
+	}
+
+	if !exists {
+		if err = mc.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{}); err != nil {
+			t.Fatalf("error creating bucket: %v", err)
+		}
+	}
+
 	bStore, _ := bundles.NewMinioStore(bundles.MinioOptions{
-		Endpoint:  "localhost:9000", //os.Getenv("S3_ENDPOINT"),
-		AccessKey: "minio",          //os.Getenv("S3_ACCESS_KEY"),
-		SecretKey: "minio123",       //os.Getenv("S3_SECRET_KEY"),
-		Bucket:    "test",
+		Endpoint:  endpoint,
+		AccessKey: accessKey,
+		SecretKey: secretKey,
+		Bucket:    bucketName,
 		UseSSL:    false,
 	})
 	bundleService := bundles.NewBundleProviderService(bStore)
@@ -226,6 +253,150 @@ func TestSaveHtmlBundleHandler(t *testing.T) {
 	})
 }
 
+func TestGetHtmlBundleHandler(t *testing.T) {
+	ctx := context.Background()
+	endpoint := getEnvOrDefault("S3_ENDPOINT", "localhost:9000")
+	accessKey := getEnvOrDefault("S3_ACCESS_KEY", "minio")
+	secretKey := getEnvOrDefault("S3_SECRET_KEY", "minio123")
+	bucketName := "test-get-html-bundle"
+
+	mc, err := minio.New(endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
+		Secure: false,
+	})
+
+	exists, err := mc.BucketExists(ctx, bucketName)
+	if err != nil {
+		t.Fatalf("error checking bucket: %v", err)
+	}
+	if !exists {
+		if err = mc.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{}); err != nil {
+			t.Fatalf("error creating bucket: %v", err)
+		}
+	}
+
+	if err != nil {
+		t.Fatalf("error creating minio client: %v", err)
+	}
+
+	bStore, err := bundles.NewMinioStore(bundles.MinioOptions{
+		Endpoint:  endpoint,
+		AccessKey: accessKey,
+		SecretKey: secretKey,
+		Bucket:    bucketName,
+		UseSSL:    false,
+	})
+
+	if err != nil {
+		t.Fatalf("error creating minio store: %v", err)
+	}
+
+	bundleService := bundles.NewBundleProviderService(bStore)
+	ctx = context.WithValue(ctx, config.ContextKeyBundleProviderService, bundleService)
+
+	s := &server.Server{}
+	s.Serve(ctx)
+
+	files := fileList{
+		{Name: "index.html", Content: "<html><body><h1>Test {{ .Name }}</h1></body></html>"},
+		{Name: "footer.html", Content: "<footer>Test Footer</footer>"},
+	}
+
+	zipBuf := createZipFileBuffer(files)
+
+	info := bundles.BundleInfo{
+		Id:             uuid.NewString(),
+		Name:           "pre-save-test-get-bundle",
+		TemplateEngine: "golang",
+		Data:           io.NopCloser(zipBuf),
+		Size:           int64(zipBuf.Len()),
+		ContentType:    "application/zip",
+		FileName:       "bundle.zip",
+	}
+
+	_, err = bStore.Save(ctx, info)
+	if err != nil {
+		t.Fatalf("error saving bundle: %v", err)
+	}
+
+	t.Run("Should get a html bundle", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/html-bundle/"+info.Id, nil)
+
+		resp, err := s.Instance.Test(req, -1)
+		if err != nil {
+			t.Fatalf("error sending request: %v", err)
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("expected status code to be 200, got %d", resp.StatusCode)
+		}
+
+		mediaType, params, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+		if err != nil {
+			t.Fatalf("error parsing media type: %v", err)
+		}
+		if mediaType != "multipart/form-data" {
+			t.Errorf("expected media type to be multipart/form-data, got %s", mediaType)
+		}
+
+		mw := multipart.NewReader(resp.Body, params["boundary"])
+		form, err := mw.ReadForm(32 << 20)
+		if err != nil {
+			t.Fatalf("error reading form: %v", err)
+		}
+		fileHeader := form.File["bundle"][0]
+		if fileHeader.Filename != "bundle.zip" {
+			t.Errorf("expected filename to be bundle.zip, got %s", fileHeader.Filename)
+		}
+
+		if fileHeader.Header.Get("Content-Type") != "application/zip" {
+			t.Errorf("expected content type to be application/zip, got %s", fileHeader.Header.Get("Content-Type"))
+		}
+
+		if fileHeader.Size != info.Size {
+			t.Errorf("expected size to be %d, got %d", info.Size, fileHeader.Size)
+		}
+
+		f, err := fileHeader.Open()
+		if err != nil {
+			t.Fatalf("error opening file: %v", err)
+		}
+		data := new(bytes.Buffer)
+		_, err = data.ReadFrom(info.Data)
+		if err != nil {
+			t.Fatalf("error reading from file: %v", err)
+		}
+		_ = f.Close()
+		if bytes.Compare(zipBuf.Bytes(), data.Bytes()) != 0 {
+			t.Error("expected data to be the same")
+		}
+
+		name := form.Value["name"][0]
+		if name != "pre-save-test-get-bundle" {
+			t.Errorf("expected name to be pre-save-test-get-bundle, got %s", name)
+		}
+
+		templateEngine := form.Value["templateEngine"][0]
+		if templateEngine != "golang" {
+			t.Errorf("expected template engine to be golang, got %s", templateEngine)
+		}
+
+		id := form.Value["id"][0]
+		if id != info.Id {
+			t.Errorf("expected id to be %s, got %s", info.Id, id)
+		}
+	})
+}
+
+func getEnvOrDefault(key, def string) string {
+	value := os.Getenv(key)
+	if value != "" {
+		return value
+	}
+	return def
+
+}
+
 func createRequestBody(zipBuf *bytes.Buffer, metadata map[string]string) (*bytes.Buffer, string, error) {
 	buf := new(bytes.Buffer)
 	w := multipart.NewWriter(buf)
@@ -253,7 +424,7 @@ func createZipFileBuffer(files fileList) *bytes.Buffer {
 
 	for _, file := range files {
 		f, _ := zipWriter.Create(file.Name)
-		f.Write([]byte(file.Content))
+		_, _ = f.Write([]byte(file.Content))
 	}
 
 	_ = zipWriter.Close()
