@@ -89,7 +89,7 @@ func TestSaveHtmlBundleHandler(t *testing.T) {
 			t.Fatalf("error creating request body: %v", err)
 		}
 
-		req := httptest.NewRequest("POST", "/api/html-bundle/save", buf)
+		req := httptest.NewRequest("POST", "/api/html-bundle", buf)
 		req.Header.Set("Content-Type", contentType)
 
 		resp, err := s.Instance.Test(req, -1)
@@ -115,7 +115,7 @@ func TestSaveHtmlBundleHandler(t *testing.T) {
 			t.Fatalf("error parsing id: %v", err)
 		}
 
-		info, err := bStore.GetFromStore(ctx, id)
+		info, err := bStore.Get(ctx, id)
 		if err != nil {
 			t.Fatalf("error getting bundle from store: %v", err)
 		}
@@ -164,7 +164,7 @@ func TestSaveHtmlBundleHandler(t *testing.T) {
 		if err != nil {
 			t.Fatalf("error creating request body: %v", err)
 		}
-		req := httptest.NewRequest("POST", "/api/html-bundle/save", buf)
+		req := httptest.NewRequest("POST", "/api/html-bundle", buf)
 		req.Header.Set("Content-Type", contentType)
 
 		resp, err := s.Instance.Test(req, -1)
@@ -196,7 +196,7 @@ func TestSaveHtmlBundleHandler(t *testing.T) {
 			t.Fatalf("error creating request body: %v", err)
 		}
 
-		req = httptest.NewRequest("POST", "/api/html-bundle/save", buf)
+		req = httptest.NewRequest("POST", "/api/html-bundle", buf)
 		req.Header.Set("Content-Type", contentType)
 
 		resp, err = s.Instance.Test(req, -1)
@@ -214,7 +214,7 @@ func TestSaveHtmlBundleHandler(t *testing.T) {
 		if err != nil {
 			t.Fatalf("error parsing id: %v", err)
 		}
-		info, err := bStore.GetFromStore(ctx, id)
+		info, err := bStore.Get(ctx, id)
 		if err != nil {
 			t.Fatalf("error getting bundle from store: %v", err)
 		}
@@ -264,6 +264,9 @@ func TestGetHtmlBundleHandler(t *testing.T) {
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
 		Secure: false,
 	})
+	if err != nil {
+		t.Fatalf("error creating minio client: %v", err)
+	}
 
 	exists, err := mc.BucketExists(ctx, bucketName)
 	if err != nil {
@@ -273,10 +276,6 @@ func TestGetHtmlBundleHandler(t *testing.T) {
 		if err = mc.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{}); err != nil {
 			t.Fatalf("error creating bucket: %v", err)
 		}
-	}
-
-	if err != nil {
-		t.Fatalf("error creating minio client: %v", err)
 	}
 
 	bStore, err := bundles.NewMinioStore(bundles.MinioOptions{
@@ -386,6 +385,134 @@ func TestGetHtmlBundleHandler(t *testing.T) {
 			t.Errorf("expected id to be %s, got %s", info.Id, id)
 		}
 	})
+}
+
+func TestListHtmlBundleHandler(t *testing.T) {
+	ctx := context.Background()
+	endpoint := getEnvOrDefault("S3_ENDPOINT", "localhost:9000")
+	accessKey := getEnvOrDefault("S3_ACCESS_KEY", "minio")
+	secretKey := getEnvOrDefault("S3_SECRET_KEY", "minio123")
+	bucketName := "test-list-html-bundle"
+
+	mc, err := minio.New(endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
+		Secure: false,
+	})
+
+	exists, err := mc.BucketExists(ctx, bucketName)
+	if err != nil {
+		t.Fatalf("error checking bucket: %v", err)
+	}
+
+	if !exists {
+		if err = mc.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{}); err != nil {
+			t.Fatalf("error creating bucket: %v", err)
+		}
+	}
+
+	bStore, err := bundles.NewMinioStore(bundles.MinioOptions{
+		Endpoint:  endpoint,
+		AccessKey: accessKey,
+		SecretKey: secretKey,
+		Bucket:    bucketName,
+		UseSSL:    false,
+	})
+
+	if err != nil {
+		t.Fatalf("error creating minio store: %v", err)
+	}
+
+	bundleService := bundles.NewBundleProviderService(bStore)
+	ctx = context.WithValue(ctx, config.ContextKeyBundleProviderService, bundleService)
+
+	s := &server.Server{}
+	s.Serve(ctx)
+
+	files := fileList{
+		{Name: "index.html", Content: "<html><body><h1>Test {{ .Name }}</h1></body></html>"},
+		{Name: "footer.html", Content: "<footer>Test Footer</footer>"},
+	}
+
+	zipBuf := createZipFileBuffer(files)
+
+	info := bundles.BundleInfo{
+		Id:             uuid.NewString(),
+		Name:           "pre-save-test-list-bundle",
+		TemplateEngine: "golang",
+		Data:           io.NopCloser(zipBuf),
+		Size:           int64(zipBuf.Len()),
+		ContentType:    "application/zip",
+		FileName:       "bundle.zip",
+	}
+
+	_, err = bStore.Save(ctx, info)
+	if err != nil {
+		t.Fatalf("error saving bundle: %v", err)
+	}
+
+	info2 := bundles.BundleInfo{
+		Id:             uuid.NewString(),
+		Name:           "pre-save-test-list-bundle-2",
+		TemplateEngine: "golang",
+		Data:           io.NopCloser(zipBuf),
+		Size:           int64(zipBuf.Len()),
+		ContentType:    "application/zip",
+	}
+	_, err = bStore.Save(ctx, info2)
+	if err != nil {
+		t.Fatalf("error saving bundle: %v", err)
+	}
+
+	t.Cleanup(func() {
+		if err = mc.RemoveObject(ctx, bucketName, "bundles",
+			minio.RemoveObjectOptions{ForceDelete: true}); err != nil {
+			t.Errorf("error removing object: %v", err)
+		}
+		if err = mc.RemoveBucket(ctx, bucketName); err != nil {
+			t.Errorf("error removing bucket: %v", err)
+		}
+	})
+
+	t.Run("Should list html bundles info", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/html-bundle", nil)
+
+		resp, err := s.Instance.Test(req, -1)
+		if err != nil {
+			t.Fatalf("error sending request: %v", err)
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("expected status code to be 200, got %d", resp.StatusCode)
+		}
+
+		response := struct {
+			Items []bundles.BundleInfo `json:"items"`
+		}{}
+
+		_ = json.NewDecoder(resp.Body).Decode(&response)
+
+		if len(response.Items) != 2 {
+			t.Fatalf("expected items to be 2, got %d", len(response.Items))
+		}
+
+		if !expectedBundleInList(response.Items, info) {
+			t.Errorf("expected bundle %s not found in list", info.Name)
+		}
+
+		if !expectedBundleInList(response.Items, info2) {
+			t.Errorf("expected bundle %s not found in list", info2.Name)
+		}
+	})
+
+}
+
+func expectedBundleInList(items []bundles.BundleInfo, info bundles.BundleInfo) bool {
+	for _, item := range items {
+		if item.Id == info.Id && item.Name == info.Name {
+			return true
+		}
+	}
+	return false
 }
 
 func getEnvOrDefault(key, def string) string {

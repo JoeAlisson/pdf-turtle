@@ -13,6 +13,8 @@ import (
 	"net/textproto"
 )
 
+var bundleProviderNotFound = errors.New("bundle provider service not found in context")
+
 // SaveHtmlBundleHandler godoc
 // @Summary      Save HTML bundle to server
 // @Description  Save HTML bundle to server, allowing to render PDFs from it at a later time
@@ -24,12 +26,12 @@ import (
 // @Param        id              formData  string  false  "ID of the bundle"
 // @Param        templateEngine  formData  string  false  "Template engine to use for template"
 // @Success      200             "OK"
-// @Router       /api/html-bundle/save [post]
+// @Router       /api/html-bundle [post]
 func SaveHtmlBundleHandler(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	bundleProvider, ok := ctx.Value(config.ContextKeyBundleProviderService).(services.BundleProviderService)
 	if !ok {
-		return errors.New("bundle provider service not found in context")
+		return bundleProviderNotFound
 	}
 
 	form, err := c.MultipartForm()
@@ -73,11 +75,19 @@ func SaveHtmlBundleHandler(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"id": id})
 }
 
+// GetHtmlBundleHandler godoc
+// @Summary      Get HTML bundle from server
+// @Description  Get HTML bundle from server, allowing to render PDFs from it at a later time
+// @Tags         Get HTML-Bundle
+// @Produce      multipart/form-data
+// @Param        id  path  string  true  "ID of the bundle"
+// @Success      200  "OK"
+// @Router       /api/html-bundle/{id} [get]
 func GetHtmlBundleHandler(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	bundleProvider, ok := ctx.Value(config.ContextKeyBundleProviderService).(services.BundleProviderService)
 	if !ok {
-		return errors.New("bundle provider service not found in context")
+		return bundleProviderNotFound
 	}
 
 	id, err := uuid.Parse(c.Params("id"))
@@ -121,4 +131,18 @@ func GetHtmlBundleHandler(c *fiber.Ctx) error {
 		return err
 	}
 	return nil
+}
+
+func ListHtmlBundlesInfoHandler(c *fiber.Ctx) error {
+	ctx := c.UserContext()
+	bundleProvider, ok := ctx.Value(config.ContextKeyBundleProviderService).(services.BundleProviderService)
+	if !ok {
+		return bundleProviderNotFound
+	}
+	list, err := bundleProvider.ListInfoFromStore(ctx)
+	if err != nil {
+		return err
+	}
+	return c.JSON(list)
+
 }

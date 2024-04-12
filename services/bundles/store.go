@@ -67,11 +67,11 @@ func parseId(id string) uuid.UUID {
 	return uuid.New()
 }
 
-func (m MinioStore) DeleteFromStore(ctx context.Context, id uuid.UUID) error {
+func (m MinioStore) Delete(ctx context.Context, id uuid.UUID) error {
 	return m.client.RemoveObject(ctx, m.bucket, bundlePath+id.String(), minio.RemoveObjectOptions{})
 }
 
-func (m MinioStore) GetFromStore(ctx context.Context, id uuid.UUID) (BundleInfo, error) {
+func (m MinioStore) Get(ctx context.Context, id uuid.UUID) (BundleInfo, error) {
 	obj, err := m.client.GetObject(ctx, m.bucket, bundlePath+id.String(), minio.GetObjectOptions{})
 	if err != nil {
 		return BundleInfo{}, err
@@ -91,4 +91,23 @@ func (m MinioStore) GetFromStore(ctx context.Context, id uuid.UUID) (BundleInfo,
 		Size:           info.Size,
 		ContentType:    info.ContentType,
 	}, nil
+}
+
+func (m MinioStore) ListInfo(ctx context.Context) (BundleInfoList, error) {
+	infoChan := m.client.ListObjects(ctx, m.bucket, minio.ListObjectsOptions{
+		WithMetadata: true,
+		Prefix:       bundlePath,
+	})
+
+	var list BundleInfoList
+	for obj := range infoChan {
+		if obj.Err != nil {
+			return list, obj.Err
+		}
+		list.Items = append(list.Items, BundleInfo{
+			Id:   obj.UserMetadata["X-Amz-Meta-Id"],
+			Name: obj.UserMetadata["X-Amz-Meta-Name"],
+		})
+	}
+	return list, nil
 }
