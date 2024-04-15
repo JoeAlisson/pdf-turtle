@@ -37,7 +37,7 @@ func RenderPdfFromHtmlFromTemplateHandler(c *fiber.Ctx) error {
 		return err
 	}
 
-	return writePdf(c, pdfData)
+	return writePdf(c, "document.pdf", pdfData)
 }
 
 // TestHtmlTemplateHandler godoc

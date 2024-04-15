@@ -5,7 +5,6 @@ package bundles
 import (
 	"bytes"
 	"context"
-	"io"
 	"testing"
 
 	"github.com/minio/minio-go/v7"
@@ -28,13 +27,13 @@ func TestMinioStore_Save(t *testing.T) {
 	_ = store.client.MakeBucket(context.Background(), store.bucket, minio.MakeBucketOptions{})
 
 	t.Run("Should save a file in the store", func(t *testing.T) {
-		id, err := store.Save(context.Background(), BundleInfo{
+		id, err := store.Save(context.Background(), Info{
 			ContentType:    "text/plain",
 			Name:           "test",
 			FileName:       "test.txt",
 			Size:           4,
 			TemplateEngine: "golang",
-			Data:           io.NopCloser(bytes.NewReader([]byte("test"))),
+			Data:           bytes.NewReader([]byte("test")),
 		})
 
 		if err != nil {

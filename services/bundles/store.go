@@ -40,7 +40,7 @@ type MinioStore struct {
 	bucket string
 }
 
-func (m MinioStore) Save(ctx context.Context, info BundleInfo) (uuid.UUID, error) {
+func (m MinioStore) Save(ctx context.Context, info Info) (uuid.UUID, error) {
 	id := parseId(info.Id)
 	opt := minio.PutObjectOptions{
 		ContentType: info.ContentType,
@@ -71,18 +71,18 @@ func (m MinioStore) Delete(ctx context.Context, id uuid.UUID) error {
 	return m.client.RemoveObject(ctx, m.bucket, bundlePath+id.String(), minio.RemoveObjectOptions{})
 }
 
-func (m MinioStore) Get(ctx context.Context, id uuid.UUID) (BundleInfo, error) {
+func (m MinioStore) Get(ctx context.Context, id uuid.UUID) (Info, error) {
 	obj, err := m.client.GetObject(ctx, m.bucket, bundlePath+id.String(), minio.GetObjectOptions{})
 	if err != nil {
-		return BundleInfo{}, err
+		return Info{}, err
 	}
 
 	info, err := obj.Stat()
 	if err != nil {
-		return BundleInfo{}, err
+		return Info{}, err
 	}
 
-	return BundleInfo{
+	return Info{
 		Id:             id.String(),
 		Name:           info.UserMetadata["Name"],
 		TemplateEngine: info.UserMetadata["Template-Engine"],
@@ -93,18 +93,18 @@ func (m MinioStore) Get(ctx context.Context, id uuid.UUID) (BundleInfo, error) {
 	}, nil
 }
 
-func (m MinioStore) ListInfo(ctx context.Context) (BundleInfoList, error) {
+func (m MinioStore) ListInfo(ctx context.Context) (InfoList, error) {
 	infoChan := m.client.ListObjects(ctx, m.bucket, minio.ListObjectsOptions{
 		WithMetadata: true,
 		Prefix:       bundlePath,
 	})
 
-	var list BundleInfoList
+	var list InfoList
 	for obj := range infoChan {
 		if obj.Err != nil {
 			return list, obj.Err
 		}
-		list.Items = append(list.Items, BundleInfo{
+		list.Items = append(list.Items, Info{
 			Id:   obj.UserMetadata["X-Amz-Meta-Id"],
 			Name: obj.UserMetadata["X-Amz-Meta-Name"],
 		})

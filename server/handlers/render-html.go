@@ -7,8 +7,6 @@ import (
 	"github.com/lucas-gaitzsch/pdf-turtle/services/pdf"
 )
 
-const TemplateEngineQueryKey = "template-engine"
-
 // RenderPdfFromHtmlHandler godoc
 // @Summary      Render PDF from HTML
 // @Description  Returns PDF file generated from HTML of body, header and footer
@@ -37,5 +35,5 @@ func RenderPdfFromHtmlHandler(c *fiber.Ctx) error {
 		return err
 	}
 
-	return writePdf(c, pdfData)
+	return writePdf(c, "document.pdf", pdfData)
 }

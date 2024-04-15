@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"math/rand/v2"
 	"net/http"
@@ -20,7 +21,7 @@ func escapeQuotes(s string) string {
 	return quoteEscaper.Replace(s)
 }
 
-func writePdf(c *fiber.Ctx, data io.Reader) error {
+func writePdf(c *fiber.Ctx, name string, data io.Reader) error {
 	ctx := c.UserContext()
 
 	if data == nil {
@@ -29,7 +30,7 @@ func writePdf(c *fiber.Ctx, data io.Reader) error {
 	}
 
 	c.Set("Content-type", "application/pdf")
-	c.Set("Content-disposition", "attachment; filename=\"document.pdf\"")
+	c.Set("Content-disposition", fmt.Sprintf("attachment; filename=\"%s\"", escapeQuotes(name)))
 
 	return c.SendStream(data)
 }

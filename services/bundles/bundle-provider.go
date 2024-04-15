@@ -10,25 +10,30 @@ import (
 
 type CleanupFunc = func()
 
-type BundleInfoList struct {
-	Items []BundleInfo
+type InfoList struct {
+	Items []Info
 }
 
-type BundleInfo struct {
-	Id             string        `json:"id,omitempty"`
-	Name           string        `json:"name,omitempty"`
-	TemplateEngine string        `json:"templateEngine,omitempty"`
-	Data           io.ReadCloser `json:"data,omitempty"`
-	Size           int64         `json:"size,omitempty"`
-	ContentType    string        `json:"contentType,omitempty"`
-	FileName       string        `json:"fileName,omitempty"`
+type InfoReader interface {
+	io.Reader
+	io.ReaderAt
+}
+
+type Info struct {
+	Id             string     `json:"id,omitempty"`
+	Name           string     `json:"name,omitempty"`
+	TemplateEngine string     `json:"templateEngine,omitempty"`
+	Data           InfoReader `json:"data,omitempty"`
+	Size           int64      `json:"size,omitempty"`
+	ContentType    string     `json:"contentType,omitempty"`
+	FileName       string     `json:"fileName,omitempty"`
 }
 
 type Store interface {
-	Save(ctx context.Context, info BundleInfo) (uuid.UUID, error)
+	Save(ctx context.Context, info Info) (uuid.UUID, error)
 	Delete(ctx context.Context, id uuid.UUID) error
-	Get(ctx context.Context, id uuid.UUID) (BundleInfo, error)
-	ListInfo(ctx context.Context) (BundleInfoList, error)
+	Get(ctx context.Context, id uuid.UUID) (Info, error)
+	ListInfo(ctx context.Context) (InfoList, error)
 }
 
 func NewBundleProviderService(s Store) *BundleProviderService {
@@ -79,7 +84,7 @@ func (bps *BundleProviderService) GetById(id uuid.UUID) (BundleReader, bool) {
 	return b, ok
 }
 
-func (bps *BundleProviderService) Save(ctx context.Context, info BundleInfo) (uuid.UUID, error) {
+func (bps *BundleProviderService) Save(ctx context.Context, info Info) (uuid.UUID, error) {
 	return bps.Store.Save(ctx, info)
 }
 
@@ -87,10 +92,10 @@ func (bps *BundleProviderService) DeleteFromStore(ctx context.Context, id uuid.U
 	return bps.Store.Delete(ctx, id)
 }
 
-func (bps *BundleProviderService) GetFromStore(ctx context.Context, id uuid.UUID) (BundleInfo, error) {
+func (bps *BundleProviderService) GetFromStore(ctx context.Context, id uuid.UUID) (Info, error) {
 	return bps.Store.Get(ctx, id)
 }
 
-func (bps *BundleProviderService) ListInfoFromStore(ctx context.Context) (BundleInfoList, error) {
+func (bps *BundleProviderService) ListInfoFromStore(ctx context.Context) (InfoList, error) {
 	return bps.Store.ListInfo(ctx)
 }

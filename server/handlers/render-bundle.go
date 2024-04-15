@@ -2,6 +2,10 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
+	"github.com/google/uuid"
+	"github.com/lucas-gaitzsch/pdf-turtle/config"
+	"github.com/lucas-gaitzsch/pdf-turtle/services"
 	"mime/multipart"
 	"strings"
 
@@ -64,7 +68,7 @@ func RenderBundleHandler(c *fiber.Ctx) error {
 		return errRender
 	}
 
-	return writePdf(c, pdfData)
+	return writePdf(c, "document.pdf", pdfData)
 }
 
 func createBundle(bundlesFromForm []*multipart.FileHeader) (*bundles.Bundle, error) {
@@ -92,4 +96,46 @@ func createBundle(bundlesFromForm []*multipart.FileHeader) (*bundles.Bundle, err
 		}
 	}
 	return bundle, nil
+}
+
+// RenderBundleByIdHandler godoc
+// @Summary      Render PDF from bundle by ID
+// @Description  Returns PDF file generated from bundle (Zip-File) of HTML or HTML template of body, header, footer and assets.
+// @Tags         Render HTML-Bundle
+// @Accept       json
+// @Produce      application/pdf
+// @Param        id  path  string  true  "ID of the bundle"
+// @Success      200  "PDF File"
+// @Router       /api/pdf/from/html-bundle/{id} [post]
+func RenderBundleByIdHandler(c *fiber.Ctx) error {
+	ctx := c.UserContext()
+
+	bundleProvider, ok := ctx.Value(config.ContextKeyBundleProviderService).(services.BundleProviderService)
+	if !ok {
+		return bundleProviderNotFound
+	}
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return fmt.Errorf("invalid id: %w", err)
+	}
+
+	info, err := bundleProvider.GetFromStore(ctx, id)
+	if err != nil {
+		return err
+	}
+	bundle := &bundles.Bundle{}
+	if err = bundle.ReadFromZip(info.Data, info.Size); err != nil {
+		return err
+	}
+	if err = bundle.TestIndexFile(); err != nil {
+		return err
+	}
+	model := c.Body()
+	pdfService := pdf.NewPdfService(ctx)
+	pdfData, err := pdfService.PdfFromBundle(bundle, string(model), info.TemplateEngine)
+	if err != nil {
+		return err
+	}
+
+	return writePdf(c, info.Name+".pdf", pdfData)
 }

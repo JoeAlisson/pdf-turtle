@@ -88,6 +88,9 @@ func (s *Server) Serve(ctx context.Context) {
 	api.Post("/pdf/from/html-bundle/render", handlers.RenderBundleHandler).
 		Name("Render PDF from HTML-Bundle")
 
+	api.Post("/pdf/from/html-bundle/:id", handlers.RenderBundleByIdHandler).
+		Name("Render PDF from HTML-Bundle by ID")
+
 	api.Post("/html-bundle", handlers.SaveHtmlBundleHandler).
 		Name("Save HTML-Bundle")
 
