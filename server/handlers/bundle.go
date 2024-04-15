@@ -58,7 +58,7 @@ func SaveHtmlBundleHandler(c *fiber.Ctx) error {
 		name = "template-" + randString()
 	}
 
-	info := bundles.BundleInfo{
+	info := bundles.Info{
 		Id:             bundleId,
 		Name:           name,
 		TemplateEngine: templateEngine,

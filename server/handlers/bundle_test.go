@@ -3,31 +3,23 @@
 package handlers_test
 
 import (
-	"archive/zip"
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
-	"io"
 	"mime"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
+
+	"github.com/google/uuid"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 
 	"github.com/lucas-gaitzsch/pdf-turtle/config"
 	"github.com/lucas-gaitzsch/pdf-turtle/server"
 	"github.com/lucas-gaitzsch/pdf-turtle/services/bundles"
-
-	"github.com/google/uuid"
 )
-
-type fileList []struct {
-	Name    string
-	Content string
-}
 
 func TestSaveHtmlBundleHandler(t *testing.T) {
 	ctx := context.Background()
@@ -119,9 +111,6 @@ func TestSaveHtmlBundleHandler(t *testing.T) {
 		if err != nil {
 			t.Fatalf("error getting bundle from store: %v", err)
 		}
-		defer func(Data io.ReadCloser) {
-			_ = Data.Close()
-		}(info.Data)
 
 		if info.Name != "test-save-bundle" {
 			t.Errorf("expected name to be test-save-bundle, got %s", info.Name)
@@ -249,7 +238,6 @@ func TestSaveHtmlBundleHandler(t *testing.T) {
 		if bytes.Compare(newZipBuf.Bytes(), data.Bytes()) != 0 {
 			t.Error("expected data to be the same")
 		}
-		_ = info.Data.Close()
 	})
 }
 
@@ -303,11 +291,11 @@ func TestGetHtmlBundleHandler(t *testing.T) {
 
 	zipBuf := createZipFileBuffer(files)
 
-	info := bundles.BundleInfo{
+	info := bundles.Info{
 		Id:             uuid.NewString(),
 		Name:           "pre-save-test-get-bundle",
 		TemplateEngine: "golang",
-		Data:           io.NopCloser(zipBuf),
+		Data:           bytes.NewReader(zipBuf.Bytes()),
 		Size:           int64(zipBuf.Len()),
 		ContentType:    "application/zip",
 		FileName:       "bundle.zip",
@@ -435,11 +423,11 @@ func TestListHtmlBundleHandler(t *testing.T) {
 
 	zipBuf := createZipFileBuffer(files)
 
-	info := bundles.BundleInfo{
+	info := bundles.Info{
 		Id:             uuid.NewString(),
 		Name:           "pre-save-test-list-bundle",
 		TemplateEngine: "golang",
-		Data:           io.NopCloser(zipBuf),
+		Data:           bytes.NewReader(zipBuf.Bytes()),
 		Size:           int64(zipBuf.Len()),
 		ContentType:    "application/zip",
 		FileName:       "bundle.zip",
@@ -450,11 +438,11 @@ func TestListHtmlBundleHandler(t *testing.T) {
 		t.Fatalf("error saving bundle: %v", err)
 	}
 
-	info2 := bundles.BundleInfo{
+	info2 := bundles.Info{
 		Id:             uuid.NewString(),
 		Name:           "pre-save-test-list-bundle-2",
 		TemplateEngine: "golang",
-		Data:           io.NopCloser(zipBuf),
+		Data:           bytes.NewReader(zipBuf.Bytes()),
 		Size:           int64(zipBuf.Len()),
 		ContentType:    "application/zip",
 	}
@@ -486,7 +474,7 @@ func TestListHtmlBundleHandler(t *testing.T) {
 		}
 
 		response := struct {
-			Items []bundles.BundleInfo `json:"items"`
+			Items []bundles.Info `json:"items"`
 		}{}
 
 		_ = json.NewDecoder(resp.Body).Decode(&response)
@@ -506,54 +494,11 @@ func TestListHtmlBundleHandler(t *testing.T) {
 
 }
 
-func expectedBundleInList(items []bundles.BundleInfo, info bundles.BundleInfo) bool {
+func expectedBundleInList(items []bundles.Info, info bundles.Info) bool {
 	for _, item := range items {
 		if item.Id == info.Id && item.Name == info.Name {
 			return true
 		}
 	}
 	return false
-}
-
-func getEnvOrDefault(key, def string) string {
-	value := os.Getenv(key)
-	if value != "" {
-		return value
-	}
-	return def
-
-}
-
-func createRequestBody(zipBuf *bytes.Buffer, metadata map[string]string) (*bytes.Buffer, string, error) {
-	buf := new(bytes.Buffer)
-	w := multipart.NewWriter(buf)
-
-	ff, err := w.CreateFormFile("bundle", "bundle.zip")
-	if err != nil {
-		return nil, "", err
-	}
-	if _, err = ff.Write(zipBuf.Bytes()); err != nil {
-		return nil, "", err
-	}
-
-	for key, value := range metadata {
-		if err = w.WriteField(key, value); err != nil {
-			return nil, "", err
-		}
-	}
-	_ = w.Close()
-	return buf, w.FormDataContentType(), err
-}
-
-func createZipFileBuffer(files fileList) *bytes.Buffer {
-	zipBuf := new(bytes.Buffer)
-	zipWriter := zip.NewWriter(zipBuf)
-
-	for _, file := range files {
-		f, _ := zipWriter.Create(file.Name)
-		_, _ = f.Write([]byte(file.Content))
-	}
-
-	_ = zipWriter.Close()
-	return zipBuf
 }
