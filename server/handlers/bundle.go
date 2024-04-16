@@ -133,6 +133,13 @@ func GetHtmlBundleHandler(c *fiber.Ctx) error {
 	return nil
 }
 
+// ListHtmlBundlesInfoHandler godoc
+// @Summary      List HTML bundles from server
+// @Description  List HTML bundles from server, allowing to render PDFs from it at a later time
+// @Tags         List HTML-Bundles Info
+// @Produce      application/json
+// @Success      200  "OK"
+// @Router       /api/html-bundle [get]
 func ListHtmlBundlesInfoHandler(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	bundleProvider, ok := ctx.Value(config.ContextKeyBundleProviderService).(services.BundleProviderService)
