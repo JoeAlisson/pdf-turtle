@@ -4,6 +4,7 @@ import JsZip from "jszip"
 import FileSaver from "file-saver"
 import { getBaseOptions, getBaseRenderData, RenderTemplateDataViewModel } from "@/models/render-data-base"
 import { Asset, BundleAssetsFolder } from "@/models/asset"
+import { ListHtmlBundlesInfoService } from "@/swagger-client"
 
 type IncludedFiles = {
   index?: boolean
@@ -12,6 +13,11 @@ type IncludedFiles = {
   options?: boolean
   assets?: boolean
   exampleModel?: boolean
+}
+
+type BundleInfo = {
+  id: string
+  name: string
 }
 
 const includedFilesAll: IncludedFiles = {
@@ -102,7 +108,7 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
     return target
   }
 
-  const saveBundle = async (
+  const downloadBundle = async (
     only?: "documentWithoutHeaderAndFooter" | "onlyBody" | "onlyHeader" | "onlyFooter" | "onlyOptions" | "onlyAssets"
   ) => {
     const includedFiles = ((): IncludedFiles | undefined => {
@@ -138,10 +144,18 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
     bundleFileInputModel.value = null
   })
 
+  const loadBundlesInfo = async (): Promise<BundleInfo[]> => {
+    return await ListHtmlBundlesInfoService.htmlBundle({
+      loading: false,
+      responseType: "json",
+    })
+  }
+
   return {
     packBundle,
+    loadBundlesInfo,
     loadBundle,
-    saveBundle,
+    downloadBundle,
     bundleFileInputModel,
   }
 }

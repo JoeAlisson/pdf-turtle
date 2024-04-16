@@ -1,5 +1,31 @@
 <template>
-  <div class="layout-wrapper" @keydown.ctrl.s.prevent.stop="saveBundle()" @keydown.ctrl.o.prevent.stop="loadBundle()">
+  <div
+    class="layout-wrapper"
+    @keydown.ctrl.s.prevent.stop="downloadBundle()"
+    @keydown.ctrl.o.prevent.stop="openBundle()"
+  >
+    <q-dialog v-model="loadingBundleDialog" :backdrop-filter="'blur(4px) saturate(150%)'">
+      <q-card>
+        <q-card-section class="row items-center q-pb-none text-h6">
+          Load Bundle
+        </q-card-section>
+
+        <q-card-section>
+          <q-list bordered>
+            <q-item v-for="bundle in loadedBundles" :key="bundle.id" clickable @click="loadingBundleDialog = false">
+              <q-item-section>
+                <q-item-label>{{ bundle.name }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Close" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
     <q-splitter v-model="splitterModel" class="full-height" :horizontal="$q.screen.lt.md">
       <template #before>
         <div class="options-with-code-container">
@@ -18,7 +44,16 @@
               <q-file v-show="false" ref="uploadBundle" v-model="bundleFileInputModel" />
               <q-btn label="Bundle" :icon="mdiPackageVariant" flat no-caps>
                 <q-menu auto-close>
-                  <q-item clickable @click="loadBundle()">
+                  <q-item clickable @click="openLoadBundleDialog()">
+                    <q-item-section avatar>
+                      <q-icon :name="mdiCloudDownloadOutline" />
+                    </q-item-section>
+                    <q-item-section>
+                      <q-item-label>Load bundle...</q-item-label>
+                    </q-item-section>
+                  </q-item>
+
+                  <q-item clickable @click="openBundle()">
                     <q-item-section avatar>
                       <q-icon :name="mdiFolderOutline" />
                     </q-item-section>
@@ -30,12 +65,12 @@
                     </q-item-section>
                   </q-item>
 
-                  <q-item clickable @click="saveBundle()">
+                  <q-item clickable @click="downloadBundle()">
                     <q-item-section avatar>
                       <q-icon :name="mdiContentSaveOutline" />
                     </q-item-section>
                     <q-item-section>
-                      <q-item-label>Save as bundle</q-item-label>
+                      <q-item-label>Download bundle</q-item-label>
                       <q-item-label caption>
                         Ctrl+S
                       </q-item-label>
@@ -179,17 +214,18 @@ import Margins from "@/components/option-inputs/Margins.vue"
 import Assets from "./option-inputs/Assets.vue"
 
 import {
-  mdiTurtle,
-  mdiOpenInNew,
+  mdiBorderNoneVariant,
+  mdiBroom,
+  mdiCloudDownloadOutline,
   mdiCogOutline,
+  mdiContentSaveOutline,
   mdiFileDocumentOutline,
   mdiFileImagePlusOutline,
-  mdiBorderNoneVariant,
-  mdiPackageVariant,
   mdiFolderOutline,
-  mdiContentSaveOutline,
   mdiImageAutoAdjust,
-  mdiBroom,
+  mdiOpenInNew,
+  mdiPackageVariant,
+  mdiTurtle,
 } from "@quasar/extras/mdi-v6"
 
 import { useBundleHandling } from "./composables/bundle-handling"
@@ -210,14 +246,17 @@ const editorTabDefinitions = readonly({
   model: "model",
 })
 const editorTab = ref(editorTabDefinitions.body)
+const loadingBundleDialog = ref(false)
+const loadedBundles = ref<{ id: string; name: string }[]>()
 
 const { renderTemplateData, settings, isLoading, hasError, errMsg, requestTimeInMs, pdfResponseDataUrl, requestPdf } =
   usePdfRendering()
 
-const { bundleFileInputModel, saveBundle } = useBundleHandling(renderTemplateData)
+const { bundleFileInputModel, downloadBundle, loadBundlesInfo } = useBundleHandling(renderTemplateData)
 
 const uploadBundle = ref<QFile>()
-function loadBundle() {
+
+function openBundle() {
   uploadBundle.value?.$el.click()
 }
 
@@ -227,6 +266,11 @@ function loadEmptyData() {
 
 function loadSampleData() {
   Object.assign(renderTemplateData, getBaseRenderData())
+}
+
+async function openLoadBundleDialog() {
+  loadedBundles.value = await loadBundlesInfo()
+  loadingBundleDialog.value = true
 }
 
 requestPdf()
