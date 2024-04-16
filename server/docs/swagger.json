@@ -14,6 +14,95 @@
         "version": "1.1"
     },
     "paths": {
+        "/api/html-bundle": {
+            "get": {
+                "description": "List HTML bundles from server, allowing to render PDFs from it at a later time",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "List HTML-Bundles Info"
+                ],
+                "summary": "List HTML bundles from server",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "post": {
+                "description": "Save HTML bundle to server, allowing to render PDFs from it at a later time",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Save HTML-Bundle"
+                ],
+                "summary": "Save HTML bundle to server",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Bundle Zip-File",
+                        "name": "bundle",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Name of the bundle",
+                        "name": "name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "ID of the bundle",
+                        "name": "id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Template engine to use for template",
+                        "name": "templateEngine",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/html-bundle/{id}": {
+            "get": {
+                "description": "Get HTML bundle from server, allowing to render PDFs from it at a later time",
+                "produces": [
+                    "multipart/form-data"
+                ],
+                "tags": [
+                    "Get HTML-Bundle"
+                ],
+                "summary": "Get HTML bundle from server",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID of the bundle",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/api/pdf/from/html-bundle/render": {
             "post": {
                 "description": "Returns PDF file generated from bundle (Zip-File) of HTML or HTML template of body, header, footer and assets. The index.html file in the Zip-Bundle is required",
@@ -46,6 +135,35 @@
                         "description": "Template engine to use for template (only required for template)",
                         "name": "templateEngine",
                         "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF File"
+                    }
+                }
+            }
+        },
+        "/api/pdf/from/html-bundle/{id}": {
+            "post": {
+                "description": "Returns PDF file generated from bundle (Zip-File) of HTML or HTML template of body, header, footer and assets.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/pdf"
+                ],
+                "tags": [
+                    "Render HTML-Bundle"
+                ],
+                "summary": "Render PDF from bundle by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID of the bundle",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -165,7 +283,7 @@
                 "summary": "Liveness probe for this service",
                 "responses": {
                     "200": {
-                        "description": ""
+                        "description": "OK"
                     }
                 }
             }
@@ -222,7 +340,11 @@
                 },
                 "margins": {
                     "description": "margins in mm; fallback to default if null",
-                    "$ref": "#/definitions/RenderOptionsMargins"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/RenderOptionsMargins"
+                        }
+                    ]
                 },
                 "pageFormat": {
                     "type": "string",
@@ -241,7 +363,11 @@
                 },
                 "pageSize": {
                     "description": "page size in mm; overrides page format",
-                    "$ref": "#/definitions/PageSize"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/PageSize"
+                        }
+                    ]
                 }
             }
         },

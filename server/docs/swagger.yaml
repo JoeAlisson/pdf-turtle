@@ -38,7 +38,8 @@ definitions:
         default: false
         type: boolean
       margins:
-        $ref: '#/definitions/RenderOptionsMargins'
+        allOf:
+        - $ref: '#/definitions/RenderOptionsMargins'
         description: margins in mm; fallback to default if null
       pageFormat:
         default: A4
@@ -54,7 +55,8 @@ definitions:
         - Legal
         type: string
       pageSize:
-        $ref: '#/definitions/PageSize'
+        allOf:
+        - $ref: '#/definitions/PageSize'
         description: page size in mm; overrides page format
     type: object
   RenderOptionsMargins:
@@ -124,6 +126,88 @@ info:
   title: PdfTurtle API
   version: "1.1"
 paths:
+  /api/html-bundle:
+    get:
+      description: List HTML bundles from server, allowing to render PDFs from it
+        at a later time
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: List HTML bundles from server
+      tags:
+      - List HTML-Bundles Info
+    post:
+      consumes:
+      - multipart/form-data
+      description: Save HTML bundle to server, allowing to render PDFs from it at
+        a later time
+      parameters:
+      - description: Bundle Zip-File
+        in: formData
+        name: bundle
+        required: true
+        type: file
+      - description: Name of the bundle
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: ID of the bundle
+        in: formData
+        name: id
+        type: string
+      - description: Template engine to use for template
+        in: formData
+        name: templateEngine
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Save HTML bundle to server
+      tags:
+      - Save HTML-Bundle
+  /api/html-bundle/{id}:
+    get:
+      description: Get HTML bundle from server, allowing to render PDFs from it at
+        a later time
+      parameters:
+      - description: ID of the bundle
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - multipart/form-data
+      responses:
+        "200":
+          description: OK
+      summary: Get HTML bundle from server
+      tags:
+      - Get HTML-Bundle
+  /api/pdf/from/html-bundle/{id}:
+    post:
+      consumes:
+      - application/json
+      description: Returns PDF file generated from bundle (Zip-File) of HTML or HTML
+        template of body, header, footer and assets.
+      parameters:
+      - description: ID of the bundle
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/pdf
+      responses:
+        "200":
+          description: PDF File
+      summary: Render PDF from bundle by ID
+      tags:
+      - Render HTML-Bundle
   /api/pdf/from/html-bundle/render:
     post:
       consumes:
@@ -225,7 +309,7 @@ paths:
       - text/plain
       responses:
         "200":
-          description: ""
+          description: OK
       summary: Liveness probe for this service
       tags:
       - Internals
