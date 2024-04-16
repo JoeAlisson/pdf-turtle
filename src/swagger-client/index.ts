@@ -33,6 +33,114 @@ export class PagedResultDto<T = any> implements IPagedResult<T> {
 // customer definition
 // empty
 
+export class ListHtmlBundlesInfoService {
+  /**
+   * List HTML bundles from server
+   */
+  static htmlBundle(options: IRequestOptions = {}): Promise<any> {
+    return new Promise((resolve, reject) => {
+      let url = basePath + "/api/html-bundle"
+
+      const configs: IRequestConfig = getConfigs("get", "application/json", url, options)
+
+      axios(configs, resolve, reject)
+    })
+  }
+}
+
+export class SaveHtmlBundleService {
+  /**
+   * Save HTML bundle to server
+   */
+  static htmlBundle(
+    params: {
+      /** Bundle Zip-File */
+      bundle: any
+      /** Name of the bundle */
+      name: string
+      /** ID of the bundle */
+      id?: string
+      /** Template engine to use for template */
+      templateEngine?: string
+    } = {} as any,
+    options: IRequestOptions = {}
+  ): Promise<any> {
+    return new Promise((resolve, reject) => {
+      let url = basePath + "/api/html-bundle"
+
+      const configs: IRequestConfig = getConfigs("post", "multipart/form-data", url, options)
+
+      let data = null
+      data = new FormData()
+      if (params["bundle"]) {
+        if (Object.prototype.toString.call(params["bundle"]) === "[object Array]") {
+          for (const item of params["bundle"]) {
+            data.append("bundle", item as any)
+          }
+        } else {
+          data.append("bundle", params["bundle"] as any)
+        }
+      }
+
+      if (params["name"]) {
+        if (Object.prototype.toString.call(params["name"]) === "[object Array]") {
+          for (const item of params["name"]) {
+            data.append("name", item as any)
+          }
+        } else {
+          data.append("name", params["name"] as any)
+        }
+      }
+
+      if (params["id"]) {
+        if (Object.prototype.toString.call(params["id"]) === "[object Array]") {
+          for (const item of params["id"]) {
+            data.append("id", item as any)
+          }
+        } else {
+          data.append("id", params["id"] as any)
+        }
+      }
+
+      if (params["templateEngine"]) {
+        if (Object.prototype.toString.call(params["templateEngine"]) === "[object Array]") {
+          for (const item of params["templateEngine"]) {
+            data.append("templateEngine", item as any)
+          }
+        } else {
+          data.append("templateEngine", params["templateEngine"] as any)
+        }
+      }
+
+      configs.data = data
+
+      axios(configs, resolve, reject)
+    })
+  }
+}
+
+export class GetHtmlBundleService {
+  /**
+   * Get HTML bundle from server
+   */
+  static htmlBundle(
+    params: {
+      /** ID of the bundle */
+      id: string
+    } = {} as any,
+    options: IRequestOptions = {}
+  ): Promise<any> {
+    return new Promise((resolve, reject) => {
+      let url = basePath + "/api/html-bundle/{id}"
+      url = url.replace("{id}", params["id"] + "")
+
+      const configs: IRequestConfig = getConfigs("get", "application/json", url, options)
+
+      axios(configs, resolve, reject)
+    })
+  }
+}
+
 export class RenderHtmlBundleService {
   /**
    * Render PDF from bundle including HTML(-Template) with model and assets provided in form-data (keys: bundle, model)
@@ -86,6 +194,25 @@ export class RenderHtmlBundleService {
       }
 
       configs.data = data
+
+      axios(configs, resolve, reject)
+    })
+  }
+  /**
+   * Render PDF from bundle by ID
+   */
+  static htmlBundle(
+    params: {
+      /** ID of the bundle */
+      id: string
+    } = {} as any,
+    options: IRequestOptions = {}
+  ): Promise<any> {
+    return new Promise((resolve, reject) => {
+      let url = basePath + "/api/pdf/from/html-bundle/{id}"
+      url = url.replace("{id}", params["id"] + "")
+
+      const configs: IRequestConfig = getConfigs("post", "application/json", url, options)
 
       axios(configs, resolve, reject)
     })
@@ -174,8 +301,6 @@ export class InternalsService {
 
       const configs: IRequestConfig = getConfigs("get", "multipart/form-data", url, options)
 
-      /** 适配ios13，get请求不允许带body */
-
       axios(configs, resolve, reject)
     })
   }
@@ -211,13 +336,13 @@ export interface RenderOptions {
   landscape?: boolean
 
   /** margins in mm; fallback to default if null */
-  margins?: RenderOptionsMargins
+  margins?: any | null
 
   /**  */
   pageFormat?: EnumRenderOptionsPageFormat
 
   /** page size in mm; overrides page format */
-  pageSize?: PageSize
+  pageSize?: any | null
 }
 
 export interface RenderOptionsMargins {
