@@ -20,6 +20,11 @@ type MinioOptions struct {
 	UseSSL    bool
 }
 
+type MinioStore struct {
+	client *minio.Client
+	bucket string
+}
+
 func NewMinioStore(opt MinioOptions) (MinioStore, error) {
 	mc, err := minio.New(opt.Endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(opt.AccessKey, opt.SecretKey, ""),
@@ -29,15 +34,28 @@ func NewMinioStore(opt MinioOptions) (MinioStore, error) {
 	if err != nil {
 		return MinioStore{}, err
 	}
+
+	if err = ensureBucketExists(mc, opt); err != nil {
+		return MinioStore{}, err
+
+	}
 	return MinioStore{
 		client: mc,
 		bucket: opt.Bucket,
 	}, nil
 }
 
-type MinioStore struct {
-	client *minio.Client
-	bucket string
+func ensureBucketExists(mc *minio.Client, opt MinioOptions) error {
+	exists, err := mc.BucketExists(context.Background(), opt.Bucket)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		err = mc.MakeBucket(context.Background(), opt.Bucket, minio.MakeBucketOptions{
+			Region: opt.Region,
+		})
+	}
+	return err
 }
 
 func (m MinioStore) Save(ctx context.Context, info Info) (uuid.UUID, error) {

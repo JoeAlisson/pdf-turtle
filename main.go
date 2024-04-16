@@ -38,7 +38,7 @@ func initServicesCtx(ctx context.Context) context.Context {
 
 	c := config.Get(ctx)
 
-	bStore, _ := bundles.NewMinioStore(bundles.MinioOptions{
+	bStore, err := bundles.NewMinioStore(bundles.MinioOptions{
 		Endpoint:  c.S3Endpoint,
 		AccessKey: c.S3AccessKey,
 		SecretKey: c.S3SecretKey,
@@ -46,6 +46,9 @@ func initServicesCtx(ctx context.Context) context.Context {
 		Region:    c.S3Region,
 		UseSSL:    c.S3Secure,
 	})
+	if err != nil {
+		log.Warn().Err(err).Msg("could not connect to object store")
+	}
 	bundleProviderService := bundles.NewBundleProviderService(bStore)
 	servicesCtx = context.WithValue(servicesCtx, config.ContextKeyBundleProviderService, bundleProviderService)
 
