@@ -43,15 +43,15 @@
 </template>
 
 <script setup lang="ts">
-import { mdiAttachmentPlus, mdiClipboardOutline, mdiDeleteOutline } from "@quasar/extras/mdi-v6"
+import { mdiAttachmentPlus, mdiClipboardOutline, mdiDeleteOutline } from "@quasar/extras/mdi-v7"
 import { Asset } from "@/models/asset"
 import { ref, watch } from "vue"
 import { useQuasar } from "quasar"
 
-const quasar = useQuasar()
+useQuasar()
 
 const props = defineProps<{ modelValue: Asset[] }>()
-const emit = defineEmits<{ (event: "update:modelValue", modelValue: Asset[]): void }>()
+const emit = defineEmits<(event: "update:modelValue", modelValue: Asset[]) => void>()
 
 const assetToAddFileInputModel = ref<File[] | null>(null)
 
