@@ -4,7 +4,12 @@ import JsZip from "jszip"
 import FileSaver from "file-saver"
 import { getBaseOptions, getBaseRenderData, RenderTemplateDataViewModel } from "@/models/render-data-base"
 import { Asset, BundleAssetsFolder } from "@/models/asset"
-import { ListHtmlBundlesInfoService } from "@/swagger-client"
+import {
+  EnumRenderTemplateDataTemplateEngine,
+  ListHtmlBundlesInfoService,
+  SaveHtmlBundleService,
+} from "@/swagger-client"
+import { serverBaseUrl } from "@/config/server"
 
 type IncludedFiles = {
   index?: boolean
@@ -135,27 +140,64 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
     FileSaver.saveAs(zip, "pdf-turtle-bundle.zip")
   }
 
+  const loadBundlesInfo = async (): Promise<BundleInfo[]> => {
+    const res = await ListHtmlBundlesInfoService.htmlBundle({
+      loading: false,
+      responseType: "json",
+    })
+    console.log(res.Items)
+    return res.Items
+  }
+
+  const getBundle = async (id: string): Promise<void> => {
+    const res = await fetch(`${serverBaseUrl}/api/html-bundle/${id}`)
+    const data = await res.formData()
+    const bundle = data.get("bundle") as File
+
+    await loadBundle(await bundle.arrayBuffer(), reactiveRenderTemplateDataViewModel)
+    const engine = data.get("templateEngine") as keyof typeof EnumRenderTemplateDataTemplateEngine
+    reactiveRenderTemplateDataViewModel.templateEngine = EnumRenderTemplateDataTemplateEngine[engine]
+    reactiveRenderTemplateDataViewModel.modelStr = "{}"
+
+    currentBundle.value = { id, name: data.get("name") as string }
+  }
+
+  const storeBundle = async (name: string) => {
+    const bundle = await packBundle(reactiveRenderTemplateDataViewModel)
+    const res = await SaveHtmlBundleService.htmlBundle(
+      {
+        bundle,
+        name,
+        id: currentBundle.value?.id ?? "",
+        templateEngine: reactiveRenderTemplateDataViewModel.templateEngine,
+      },
+      {
+        loading: false,
+        responseType: "json",
+      }
+    )
+    currentBundle.value = { id: res.id, name }
+    return res.id
+  }
+
+  const currentBundle = ref<BundleInfo | null>(null)
   const bundleFileInputModel = ref<File | null>(null)
   watch(bundleFileInputModel, async (b) => {
     if (b) {
       await loadBundle(await b.arrayBuffer(), reactiveRenderTemplateDataViewModel)
+      currentBundle.value = null
     }
 
     bundleFileInputModel.value = null
   })
 
-  const loadBundlesInfo = async (): Promise<BundleInfo[]> => {
-    return await ListHtmlBundlesInfoService.htmlBundle({
-      loading: false,
-      responseType: "json",
-    })
-  }
-
   return {
-    packBundle,
+    getBundle,
+    storeBundle,
     loadBundlesInfo,
     loadBundle,
     downloadBundle,
+    currentBundle,
     bundleFileInputModel,
   }
 }

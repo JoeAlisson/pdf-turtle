@@ -1,6 +1,6 @@
 import { createApp } from "vue"
 import { Quasar, QuasarPluginOptions } from "quasar"
-import quasarIconSet from "quasar/icon-set/svg-mdi-v6"
+import quasarIconSet from "quasar/icon-set/svg-mdi-v7"
 
 import { router } from "./router"
 

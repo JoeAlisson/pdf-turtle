@@ -139,7 +139,7 @@ import {
   mdiTortoise,
   mdiGithub,
   mdiCodeBraces,
-} from "@quasar/extras/mdi-v6"
+} from "@quasar/extras/mdi-v7"
 import { serverBaseUrl } from "./config/server"
 
 const localStorageIsDarkThemeKey = "isDarkMode"
@@ -161,7 +161,7 @@ export default defineComponent({
       }
     }
     const userSelectedDark = ref(getStoredUserSelectedDark())
-    const themeIsDark = computed(() => (userSelectedDark.value === null ? browserDarkMode : userSelectedDark.value))
+    const themeIsDark = computed(() => userSelectedDark.value ?? browserDarkMode)
 
     watch(themeIsDark, (isDark) => $q.dark.set(isDark))
     $q.dark.set(themeIsDark.value)

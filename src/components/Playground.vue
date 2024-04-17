@@ -4,24 +4,33 @@
     @keydown.ctrl.s.prevent.stop="downloadBundle()"
     @keydown.ctrl.o.prevent.stop="openBundle()"
   >
-    <q-dialog v-model="loadingBundleDialog" :backdrop-filter="'blur(4px) saturate(150%)'">
+    <q-dialog v-model="bundleDialog.show" :backdrop-filter="'blur(4px) saturate(150%)'">
       <q-card>
         <q-card-section class="row items-center q-pb-none text-h6">
-          Load Bundle
+          {{ bundleDialog.title }}
         </q-card-section>
 
         <q-card-section>
-          <q-list bordered>
-            <q-item v-for="bundle in loadedBundles" :key="bundle.id" clickable @click="loadingBundleDialog = false">
+          <q-list bordered v-if="!bundleDialog.saving && bundleDialog.bundles && bundleDialog.bundles.length > 0">
+            <q-item clickable v-for="bundle in bundleDialog.bundles" :key="bundle.id" @click="loadBundle(bundle.id)">
               <q-item-section>
                 <q-item-label>{{ bundle.name }}</q-item-label>
               </q-item-section>
             </q-item>
           </q-list>
+          <q-card-section v-else-if="bundleDialog.saving" class="q-pt-none">
+            <q-card-section caption>
+              Bundle name
+            </q-card-section>
+            <q-input dense v-model="bundleDialog.bundleName" autofocus @keyup.enter="saveBundle()" />
+          </q-card-section>
+          <q-card-section v-else>
+            <q-item-label>No bundles available</q-item-label>
+          </q-card-section>
         </q-card-section>
 
-        <q-card-actions align="right">
-          <q-btn flat label="Close" v-close-popup />
+        <q-card-actions align="right" v-if="bundleDialog.saving">
+          <q-btn flat label="Save" v-close-popup @click="saveBundle()" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -29,6 +38,10 @@
     <q-splitter v-model="splitterModel" class="full-height" :horizontal="$q.screen.lt.md">
       <template #before>
         <div class="options-with-code-container">
+          <q-card v-if="currentBundle">
+            <q-card-section>Current Template: {{ currentBundle.name }}</q-card-section>
+          </q-card>
+
           <!-- ### Options-Container ### -->
           <q-card flat bordered class="options-container">
             <q-card-section class="row">
@@ -50,6 +63,15 @@
                     </q-item-section>
                     <q-item-section>
                       <q-item-label>Load bundle...</q-item-label>
+                    </q-item-section>
+                  </q-item>
+
+                  <q-item clickable @click="openSaveBundleDialog()">
+                    <q-item-section avatar>
+                      <q-icon :name="mdiCloudUploadOutline" />
+                    </q-item-section>
+                    <q-item-section>
+                      <q-item-label>Save bundle...</q-item-label>
                     </q-item-section>
                   </q-item>
 
@@ -217,6 +239,7 @@ import {
   mdiBorderNoneVariant,
   mdiBroom,
   mdiCloudDownloadOutline,
+  mdiCloudUploadOutline,
   mdiCogOutline,
   mdiContentSaveOutline,
   mdiFileDocumentOutline,
@@ -226,13 +249,21 @@ import {
   mdiOpenInNew,
   mdiPackageVariant,
   mdiTurtle,
-} from "@quasar/extras/mdi-v6"
+} from "@quasar/extras/mdi-v7"
 
 import { useBundleHandling } from "./composables/bundle-handling"
 import { usePdfRendering } from "./composables/pdf-rendering"
 import { readonly, ref } from "vue"
 import { getBaseRenderData } from "@/models/render-data-base"
 import { QFile } from "quasar"
+
+type BundleDialog = {
+  title: string
+  show: boolean
+  bundles: { id: string; name: string }[]
+  saving: boolean
+  bundleName: string
+}
 
 const splitterModel = ref(50)
 
@@ -246,13 +277,19 @@ const editorTabDefinitions = readonly({
   model: "model",
 })
 const editorTab = ref(editorTabDefinitions.body)
-const loadingBundleDialog = ref(false)
-const loadedBundles = ref<{ id: string; name: string }[]>()
+const bundleDialog = ref<BundleDialog>({
+  title: "",
+  show: false,
+  saving: false,
+  bundles: [],
+  bundleName: "",
+})
 
 const { renderTemplateData, settings, isLoading, hasError, errMsg, requestTimeInMs, pdfResponseDataUrl, requestPdf } =
   usePdfRendering()
 
-const { bundleFileInputModel, downloadBundle, loadBundlesInfo } = useBundleHandling(renderTemplateData)
+const { bundleFileInputModel, currentBundle, downloadBundle, loadBundlesInfo, storeBundle, getBundle } =
+  useBundleHandling(renderTemplateData)
 
 const uploadBundle = ref<QFile>()
 
@@ -262,15 +299,37 @@ function openBundle() {
 
 function loadEmptyData() {
   Object.assign(renderTemplateData, getBaseRenderData(true))
+  currentBundle.value = null
 }
 
 function loadSampleData() {
   Object.assign(renderTemplateData, getBaseRenderData())
+  currentBundle.value = null
 }
 
 async function openLoadBundleDialog() {
-  loadedBundles.value = await loadBundlesInfo()
-  loadingBundleDialog.value = true
+  bundleDialog.value.bundles = await loadBundlesInfo()
+  console.log("Bundles", bundleDialog.value.bundles)
+  bundleDialog.value.title = "Load bundle"
+  bundleDialog.value.saving = false
+  bundleDialog.value.show = true
+}
+
+function loadBundle(bundleId: string) {
+  console.log("Load bundle", bundleId)
+  getBundle(bundleId)
+  bundleDialog.value.show = false
+}
+
+function openSaveBundleDialog() {
+  bundleDialog.value.title = "Save bundle"
+  bundleDialog.value.saving = true
+  bundleDialog.value.show = true
+}
+
+async function saveBundle() {
+  console.log("Save bundle", bundleDialog.value.bundleName)
+  await storeBundle(bundleDialog.value.bundleName)
 }
 
 requestPdf()
