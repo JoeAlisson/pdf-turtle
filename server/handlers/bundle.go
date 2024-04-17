@@ -3,14 +3,16 @@ package handlers
 import (
 	"errors"
 	"fmt"
-	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
-	"github.com/lucas-gaitzsch/pdf-turtle/config"
-	"github.com/lucas-gaitzsch/pdf-turtle/services"
-	"github.com/lucas-gaitzsch/pdf-turtle/services/bundles"
 	"io"
 	"mime/multipart"
 	"net/textproto"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
+
+	"github.com/lucas-gaitzsch/pdf-turtle/config"
+	"github.com/lucas-gaitzsch/pdf-turtle/services"
+	"github.com/lucas-gaitzsch/pdf-turtle/services/bundles"
 )
 
 var bundleProviderNotFound = errors.New("bundle provider service not found in context")
@@ -25,7 +27,7 @@ var bundleProviderNotFound = errors.New("bundle provider service not found in co
 // @Param        name            formData  string  true   "Name of the bundle"
 // @Param        id              formData  string  false  "ID of the bundle"
 // @Param        templateEngine  formData  string  false  "Template engine to use for template"
-// @Success      200             "OK"
+// @Success      201             "Created"
 // @Router       /api/html-bundle [post]
 func SaveHtmlBundleHandler(c *fiber.Ctx) error {
 	ctx := c.UserContext()
@@ -101,7 +103,6 @@ func GetHtmlBundleHandler(c *fiber.Ctx) error {
 	}
 
 	w := multipart.NewWriter(c)
-	defer w.Close()
 
 	c.Set(fiber.HeaderContentType, w.FormDataContentType())
 
@@ -130,7 +131,7 @@ func GetHtmlBundleHandler(c *fiber.Ctx) error {
 	if err = w.WriteField(formDataKeyTemplateEngine, info.TemplateEngine); err != nil {
 		return err
 	}
-	return nil
+	return w.Close()
 }
 
 // ListHtmlBundlesInfoHandler godoc
