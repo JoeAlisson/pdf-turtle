@@ -160,6 +160,7 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
     reactiveRenderTemplateDataViewModel.modelStr = "{}"
 
     currentBundle.value = { id, name: data.get("name") as string }
+    dirty.value = false
   }
 
   const storeBundle = async (name: string) => {
@@ -198,10 +199,18 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
   })
 
   window.onbeforeunload = (e) => {
+    if (currentBundle.value?.id) {
+      localStorage.setItem("currentBundle", currentBundle.value.id)
+    }
     if (dirty.value) {
       e.preventDefault()
       e.returnValue = "there are unsaved data, are you sure you want to leave?"
     }
+  }
+
+  const savedBundleId = localStorage.getItem("currentBundle")
+  if (savedBundleId) {
+    getBundle(savedBundleId).catch(console.error)
   }
 
   return {
