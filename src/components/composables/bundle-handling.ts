@@ -177,10 +177,12 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
       }
     )
     currentBundle.value = { id: res.id, name }
+    dirty.value = false
     return res.id
   }
 
   const currentBundle = ref<BundleInfo | null>(null)
+  const dirty = ref(false)
   const bundleFileInputModel = ref<File | null>(null)
   watch(bundleFileInputModel, async (b) => {
     if (b) {
@@ -190,6 +192,17 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
 
     bundleFileInputModel.value = null
   })
+
+  watch(reactiveRenderTemplateDataViewModel, () => {
+    dirty.value = true
+  })
+
+  window.onbeforeunload = (e) => {
+    if (dirty.value) {
+      e.preventDefault()
+      e.returnValue = "there are unsaved data, are you sure you want to leave?"
+    }
+  }
 
   return {
     getBundle,
