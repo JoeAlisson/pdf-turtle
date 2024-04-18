@@ -5,6 +5,7 @@
     @keydown.ctrl.o.prevent.stop="openBundle()"
     @keydown.ctrl.s.prevent.stop="saveBundle()"
     @keydown.ctrl.l.prevent.stop="openLoadBundleDialog()"
+    @keydown.ctrl.e.prevent.stop="requestPdf()"
   >
     <q-dialog v-model="bundleDialog.show" :backdrop-filter="'blur(4px) saturate(150%)'">
       <q-card>
@@ -165,7 +166,7 @@
                 flat
                 ripple
               >
-                <q-tooltip>Render PDF</q-tooltip>
+                <q-tooltip>Render PDF (CTRL+E)</q-tooltip>
               </q-btn>
 
               <div v-if="requestTimeInMs" class="runtime-container">
