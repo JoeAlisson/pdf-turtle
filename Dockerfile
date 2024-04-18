@@ -17,7 +17,7 @@ COPY .pdf-turtle-playground/ ./
 RUN npm run build
 
 
-FROM chromedp/headless-shell:123.0.6312.86 AS runtime
+FROM chromedp/headless-shell:124.0.6367.60 AS runtime
 WORKDIR /app
 
 RUN apt update && apt install -y ca-certificates fonts-open-sans fonts-roboto fonts-noto-color-emoji && apt clean
