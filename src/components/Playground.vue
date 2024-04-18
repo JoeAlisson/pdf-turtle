@@ -1,8 +1,10 @@
 <template>
   <div
     class="layout-wrapper"
-    @keydown.ctrl.s.prevent.stop="downloadBundle()"
+    @keydown.ctrl.d.prevent.stop="downloadBundle()"
     @keydown.ctrl.o.prevent.stop="openBundle()"
+    @keydown.ctrl.s.prevent.stop="saveBundle()"
+    @keydown.ctrl.l.prevent.stop="openLoadBundleDialog()"
   >
     <q-dialog v-model="bundleDialog.show" :backdrop-filter="'blur(4px) saturate(150%)'">
       <q-card>
@@ -59,15 +61,21 @@
                     </q-item-section>
                     <q-item-section>
                       <q-item-label>Load bundle...</q-item-label>
+                      <q-item-label caption>
+                        Ctrl+L
+                      </q-item-label>
                     </q-item-section>
                   </q-item>
 
-                  <q-item clickable @click="openSaveBundleDialog()">
+                  <q-item clickable @click="saveBundle()">
                     <q-item-section avatar>
                       <q-icon :name="mdiCloudUploadOutline" />
                     </q-item-section>
                     <q-item-section>
                       <q-item-label>Save bundle...</q-item-label>
+                      <q-item-label caption>
+                        Ctrl+S
+                      </q-item-label>
                     </q-item-section>
                   </q-item>
 
@@ -90,7 +98,7 @@
                     <q-item-section>
                       <q-item-label>Download bundle</q-item-label>
                       <q-item-label caption>
-                        Ctrl+S
+                        Ctrl+D
                       </q-item-label>
                     </q-item-section>
                   </q-item>
@@ -195,7 +203,25 @@
           </div>
 
           <q-bar v-if="currentBundle" dense>
-            Current Template: {{ currentBundle.name }}
+            <div class="cursor-pointer" style="max-width: fit-content">
+              Current Template: {{ currentBundle.name }}
+              <q-icon :name="mdiPencilOutline" />
+              <q-popup-edit v-model="currentBundle.name" class="bg-accent text-white" v-slot="scope">
+                <q-input
+                  dark
+                  color="white"
+                  v-model="scope.value"
+                  dense
+                  autofocus
+                  counter
+                  @keyup.enter="scope.set"
+                >
+                  <template #append>
+                    <q-icon :name="mdiPencilOutline" />
+                  </template>
+                </q-input>
+              </q-popup-edit>
+            </div>
           </q-bar>
         </div>
       </template>
@@ -248,6 +274,7 @@ import {
   mdiImageAutoAdjust,
   mdiOpenInNew,
   mdiPackageVariant,
+  mdiPencilOutline,
   mdiTurtle,
 } from "@quasar/extras/mdi-v7"
 
@@ -327,9 +354,13 @@ function openSaveBundleDialog() {
   bundleDialog.value.show = true
 }
 
-async function saveBundle() {
-  console.log("Save bundle", bundleDialog.value.bundleName)
-  await storeBundle(bundleDialog.value.bundleName)
+async function saveBundle(rename: boolean = false) {
+  const name = currentBundle.value?.name ?? bundleDialog.value.bundleName
+  if (!name || rename) {
+    openSaveBundleDialog()
+    return
+  }
+  await storeBundle(name)
 }
 
 requestPdf()
