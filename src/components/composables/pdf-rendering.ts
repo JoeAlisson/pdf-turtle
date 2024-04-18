@@ -10,6 +10,7 @@ export function usePdfRendering() {
   const renderTemplateData = reactive<RenderTemplateDataViewModel>(getBaseRenderData())
 
   const settings = reactive({
+    autoRenderDelay: 2000,
     serverUrl: "",
     secret: "",
   })
@@ -85,8 +86,11 @@ export function usePdfRendering() {
 
   // initial rendering and watch
   const debounce = createDebounce()
-  watch(renderTemplateData, () => debounce(() => requestPdf(), 1000))
   watch(settings, () => debounce(() => requestPdf(), 1000))
+  watch(renderTemplateData, () => {
+    if (settings.autoRenderDelay <= 0) return
+    debounce(() => requestPdf(), settings.autoRenderDelay)
+  })
 
   return {
     renderTemplateData,

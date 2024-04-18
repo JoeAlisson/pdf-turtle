@@ -155,12 +155,31 @@
             </q-card-section>
 
             <q-card-section class="right-container">
+              <q-btn
+                :icon="mdiArrowRightDropCircleOutline"
+                :loading="isLoading"
+                :disable="isLoading"
+                @click="requestPdf()"
+                class="q-mr-md q-px-none q-py-none"
+                round
+                flat
+                ripple
+              >
+                <q-tooltip>Render PDF</q-tooltip>
+              </q-btn>
+
               <div v-if="requestTimeInMs" class="runtime-container">
                 {{ (requestTimeInMs / 1000).toFixed(1) }}s
               </div>
 
               <q-btn round flat dense :icon="mdiCogOutline" title="Settings">
                 <q-menu class="q-pa-md">
+                  <q-input
+                    v-model="settings.autoRenderDelay"
+                    label="Auto render delay (ms)"
+                    type="number"
+                    hint="-1 to disable"
+                  />
                   <q-input
                     v-model="settings.serverUrl"
                     label="Custom server url"
@@ -262,6 +281,7 @@ import Margins from "@/components/option-inputs/Margins.vue"
 import Assets from "./option-inputs/Assets.vue"
 
 import {
+  mdiArrowRightDropCircleOutline,
   mdiBorderNoneVariant,
   mdiBroom,
   mdiCloudDownloadOutline,
