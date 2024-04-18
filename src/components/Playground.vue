@@ -38,10 +38,6 @@
     <q-splitter v-model="splitterModel" class="full-height" :horizontal="$q.screen.lt.md">
       <template #before>
         <div class="options-with-code-container">
-          <q-card v-if="currentBundle">
-            <q-card-section>Current Template: {{ currentBundle.name }}</q-card-section>
-          </q-card>
-
           <!-- ### Options-Container ### -->
           <q-card flat bordered class="options-container">
             <q-card-section class="row">
@@ -197,6 +193,10 @@
               </q-tab-panel>
             </q-tab-panels>
           </div>
+
+          <q-bar v-if="currentBundle" dense>
+            Current Template: {{ currentBundle.name }}
+          </q-bar>
         </div>
       </template>
       <template #after>
