@@ -1,10 +1,10 @@
-FROM golang:bullseye as build-service
+FROM golang:alpine3.19 AS build-service
 WORKDIR /build
 COPY . .
 RUN go build -o pdf-turtle
 
 
-FROM node:lts as build-playground
+FROM node:21.7.1-alpine3.19 AS build-playground
 WORKDIR /app
 COPY .pdf-turtle-playground/. .
 RUN npm i
@@ -16,10 +16,7 @@ WORKDIR /app
 COPY --from=build-service /build/pdf-turtle /app/pdf-turtle
 COPY --from=build-playground /app/dist /app/static-files/extern/playground
 
-RUN apt-get -y update
-RUN apt-get -y install ca-certificates fonts-open-sans fonts-roboto fonts-noto-color-emoji
-RUN apt-get clean
-RUN rm -rf /var/lib/apt/lists/*
+RUN apt update && apt install -y ca-certificates fonts-open-sans fonts-roboto fonts-noto-color-emoji && apt clean && rm -rf /var/lib/apt/lists/*
 
 ENV LANG en-US.UTF-8
 ENV LOG_LEVEL_DEBUG false
