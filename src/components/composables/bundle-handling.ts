@@ -139,43 +139,61 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
   }
 
   const loadBundlesInfo = async (): Promise<BundleInfo[]> => {
-    const res = await ListHtmlBundlesInfoService.htmlBundle({
-      loading: false,
-      responseType: "json",
-    })
-    return res.Items
+    try {
+      const res = await ListHtmlBundlesInfoService.htmlBundle({
+        loading: false,
+        responseType: "json",
+      })
+      return res.Items
+    } catch (e) {
+      bundleError.value = `Error loading bundles info: ${e}`
+    }
+    return []
   }
 
   const getBundle = async (id: string): Promise<void> => {
-    const res = await fetch(`${serverBaseUrl}/api/html-bundle/${id}`)
-    const data = await res.formData()
-    const bundle = data.get("bundle") as File
+    try {
+      const res = await fetch(`${serverBaseUrl}/api/html-bundle/${id}`)
+      if (!res.ok) {
+        bundleError.value = `Error loading bundle: ${res.statusText}`
+        return
+      }
+      const data = await res.formData()
+      const bundle = data.get("bundle") as File
 
-    await loadBundle(await bundle.arrayBuffer(), reactiveRenderTemplateDataViewModel)
-    const engine = data.get("templateEngine") as keyof typeof EnumRenderTemplateDataTemplateEngine
-    reactiveRenderTemplateDataViewModel.templateEngine = EnumRenderTemplateDataTemplateEngine[engine]
+      await loadBundle(await bundle.arrayBuffer(), reactiveRenderTemplateDataViewModel)
+      const engine = data.get("templateEngine") as keyof typeof EnumRenderTemplateDataTemplateEngine
+      reactiveRenderTemplateDataViewModel.templateEngine = EnumRenderTemplateDataTemplateEngine[engine]
 
-    currentBundle.value = { id, name: data.get("name") as string }
-    dirty.value = false
+      currentBundle.value = { id, name: data.get("name") as string }
+      dirty.value = false
+    } catch (e) {
+      bundleError.value = `Error loading bundle: ${e}`
+    }
   }
 
-  const storeBundle = async (name: string) => {
-    const bundle = await packBundle(reactiveRenderTemplateDataViewModel)
-    const res = await SaveHtmlBundleService.htmlBundle(
-      {
-        bundle,
-        name,
-        id: currentBundle.value?.id ?? "",
-        templateEngine: reactiveRenderTemplateDataViewModel.templateEngine,
-      },
-      {
-        loading: false,
-        responseType: "json",
-      }
-    )
-    currentBundle.value = { id: res.id, name }
-    dirty.value = false
-    return res.id
+  const storeBundle = async (name: string): Promise<string> => {
+    try {
+      const bundle = await packBundle(reactiveRenderTemplateDataViewModel)
+      const res = await SaveHtmlBundleService.htmlBundle(
+        {
+          bundle,
+          name,
+          id: currentBundle.value?.id ?? "",
+          templateEngine: reactiveRenderTemplateDataViewModel.templateEngine,
+        },
+        {
+          loading: false,
+          responseType: "json",
+        }
+      )
+      currentBundle.value = { id: res.id, name }
+      dirty.value = false
+      return res.id
+    } catch (e) {
+      bundleError.value = `Error saving bundle: ${e}`
+    }
+    return ""
   }
 
   const cleanLocalStorageBundle = () => {
@@ -184,6 +202,7 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
 
   const currentBundle = ref<BundleInfo | null>(null)
   const dirty = ref(false)
+  const bundleError = ref<string | null>(null)
   const bundleFileInputModel = ref<File | null>(null)
   watch(bundleFileInputModel, async (b) => {
     if (b) {
@@ -221,6 +240,7 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
     loadBundle,
     downloadBundle,
     cleanLocalStorageBundle,
+    bundleError,
     currentBundle,
     bundleFileInputModel,
   }

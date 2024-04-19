@@ -243,6 +243,12 @@
               </q-popup-edit>
             </div>
           </q-bar>
+          <q-bar v-if="bundleError" class="bg-negative">
+            <q-icon :name="mdiAlertCircleOutline" />
+            <div class="cursor-pointer">
+              error: {{ bundleError }}
+            </div>
+          </q-bar>
         </div>
       </template>
       <template #after>
@@ -282,6 +288,7 @@ import Margins from "@/components/option-inputs/Margins.vue"
 import Assets from "./option-inputs/Assets.vue"
 
 import {
+  mdiAlertCircleOutline,
   mdiArrowRightDropCircleOutline,
   mdiBorderNoneVariant,
   mdiBroom,
@@ -339,6 +346,7 @@ const { renderTemplateData, settings, isLoading, hasError, errMsg, requestTimeIn
 const {
   bundleFileInputModel,
   currentBundle,
+  bundleError,
   cleanLocalStorageBundle,
   downloadBundle,
   loadBundlesInfo,
@@ -365,14 +373,12 @@ function loadSampleData() {
 
 async function openLoadBundleDialog() {
   bundleDialog.value.bundles = await loadBundlesInfo()
-  console.log("Bundles", bundleDialog.value.bundles)
   bundleDialog.value.title = "Load bundle"
   bundleDialog.value.saving = false
   bundleDialog.value.show = true
 }
 
 function loadBundle(bundleId: string) {
-  console.log("Load bundle", bundleId)
   getBundle(bundleId)
   bundleDialog.value.show = false
 }
