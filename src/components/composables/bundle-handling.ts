@@ -69,13 +69,11 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
   ): Promise<RenderTemplateDataViewModel> => {
     const zip = await JsZip.loadAsync(bundleBufferSrc)
 
-    const emptyStringPromise = Promise.resolve("")
-
-    const indexStr = await (zip.files["index.html"]?.async("string") ?? emptyStringPromise)
-    const headerStr = await (zip.files["header.html"]?.async("string") ?? emptyStringPromise)
-    const footerStr = await (zip.files["footer.html"]?.async("string") ?? emptyStringPromise)
-    const optionsStr = await (zip.files["options.json"]?.async("string") ?? emptyStringPromise)
-    const exampleModelStr = await (zip.files["example-model.json"]?.async("string") ?? emptyStringPromise)
+    const indexStr = await zip.files["index.html"]?.async("string")
+    const headerStr = await zip.files["header.html"]?.async("string")
+    const footerStr = await zip.files["footer.html"]?.async("string")
+    const optionsStr = await zip.files["options.json"]?.async("string")
+    const exampleModelStr = (await zip.files["example-model.json"]?.async("string")) ?? "{}"
 
     const assetFolderPath = BundleAssetsFolder + "/"
     const assets: Asset[] = []
@@ -145,7 +143,6 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
       loading: false,
       responseType: "json",
     })
-    console.log(res.Items)
     return res.Items
   }
 
@@ -157,7 +154,6 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
     await loadBundle(await bundle.arrayBuffer(), reactiveRenderTemplateDataViewModel)
     const engine = data.get("templateEngine") as keyof typeof EnumRenderTemplateDataTemplateEngine
     reactiveRenderTemplateDataViewModel.templateEngine = EnumRenderTemplateDataTemplateEngine[engine]
-    reactiveRenderTemplateDataViewModel.modelStr = "{}"
 
     currentBundle.value = { id, name: data.get("name") as string }
     dirty.value = false
