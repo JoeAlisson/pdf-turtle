@@ -53,7 +53,7 @@
                 class="option-select"
               />
 
-              <q-file v-show="false" ref="uploadBundle" v-model="bundleFileInputModel" />
+              <q-file accept=".zip" v-show="false" ref="uploadBundle" v-model="bundleFileInputModel" />
               <q-btn label="Bundle" :icon="mdiPackageVariant" flat no-caps>
                 <q-menu auto-close>
                   <q-item clickable @click="openLoadBundleDialog()">
@@ -225,7 +225,6 @@
           <q-bar v-if="currentBundle" dense>
             <div class="cursor-pointer" style="max-width: fit-content">
               Current Template: {{ currentBundle.name }}
-              <q-icon :name="mdiPencilOutline" />
               <q-popup-edit v-model="currentBundle.name" class="bg-accent text-white" v-slot="scope">
                 <q-input
                   dark
@@ -241,13 +240,29 @@
                   </template>
                 </q-input>
               </q-popup-edit>
+              <q-icon :name="mdiPencilOutline" />
             </div>
+
+            <q-btn
+              square
+              flat
+              :icon="mdiContentCopy"
+              @click="copyToClipboard(currentBundle.id)"
+              title="Copy bundle id to clipboard"
+            >
+              <q-popup-proxy>
+                <q-banner class="bg-primary">
+                  Bundle id copied to clipboard
+                </q-banner>
+              </q-popup-proxy>
+            </q-btn>
           </q-bar>
           <q-bar v-if="bundleError" class="bg-negative">
             <q-icon :name="mdiAlertCircleOutline" />
             <div class="cursor-pointer">
               error: {{ bundleError }}
             </div>
+            <q-icon :name="mdiCloseBoxOutline" @click="bundleError = ''" />
           </q-bar>
         </div>
       </template>
@@ -292,9 +307,11 @@ import {
   mdiArrowRightDropCircleOutline,
   mdiBorderNoneVariant,
   mdiBroom,
+  mdiCloseBoxOutline,
   mdiCloudDownloadOutline,
   mdiCloudUploadOutline,
   mdiCogOutline,
+  mdiContentCopy,
   mdiContentSaveOutline,
   mdiFileDocumentOutline,
   mdiFileImagePlusOutline,
@@ -396,6 +413,10 @@ async function saveBundle(rename: boolean = false) {
     return
   }
   await storeBundle(name)
+}
+
+async function copyToClipboard(text: string) {
+  await navigator.clipboard.writeText(text)
 }
 
 requestPdf()
