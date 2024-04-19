@@ -336,8 +336,15 @@ const bundleDialog = ref<BundleDialog>({
 const { renderTemplateData, settings, isLoading, hasError, errMsg, requestTimeInMs, pdfResponseDataUrl, requestPdf } =
   usePdfRendering()
 
-const { bundleFileInputModel, currentBundle, downloadBundle, loadBundlesInfo, storeBundle, getBundle } =
-  useBundleHandling(renderTemplateData)
+const {
+  bundleFileInputModel,
+  currentBundle,
+  cleanLocalStorageBundle,
+  downloadBundle,
+  loadBundlesInfo,
+  storeBundle,
+  getBundle,
+} = useBundleHandling(renderTemplateData)
 
 const uploadBundle = ref<QFile>()
 
@@ -353,6 +360,7 @@ function loadEmptyData() {
 function loadSampleData() {
   Object.assign(renderTemplateData, getBaseRenderData())
   currentBundle.value = null
+  cleanLocalStorageBundle()
 }
 
 async function openLoadBundleDialog() {

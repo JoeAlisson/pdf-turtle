@@ -178,6 +178,10 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
     return res.id
   }
 
+  const cleanLocalStorageBundle = () => {
+    localStorage.removeItem("currentBundle")
+  }
+
   const currentBundle = ref<BundleInfo | null>(null)
   const dirty = ref(false)
   const bundleFileInputModel = ref<File | null>(null)
@@ -185,6 +189,7 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
     if (b) {
       await loadBundle(await b.arrayBuffer(), reactiveRenderTemplateDataViewModel)
       currentBundle.value = null
+      cleanLocalStorageBundle()
     }
 
     bundleFileInputModel.value = null
@@ -215,6 +220,7 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
     loadBundlesInfo,
     loadBundle,
     downloadBundle,
+    cleanLocalStorageBundle,
     currentBundle,
     bundleFileInputModel,
   }
