@@ -7,6 +7,11 @@ jobs:
     services:
       minio:
         image: bitnami/minio:latest
+        options: >-
+          --health-cmd "mc ready local"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
         env:
           MINIO_ROOT_USER: minio
           MINIO_ROOT_PASSWORD: minio
