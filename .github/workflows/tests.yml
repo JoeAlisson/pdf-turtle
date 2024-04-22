@@ -9,6 +9,9 @@ jobs:
         image: bitnami/minio:latest
         options: >-
           --health-cmd "mc ready local"
+        ports:
+          - 9000:9000
+          - 9001:9001
         env:
           MINIO_ROOT_USER: minio
           MINIO_ROOT_PASSWORD: minio12345
