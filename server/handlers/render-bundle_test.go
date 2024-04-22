@@ -92,6 +92,7 @@ func TestRenderBundleByIdHandler(t *testing.T) {
 
 	t.Cleanup(func() {
 		srvLoopback.Close(ctx)
+		s.Close(ctx)
 
 		if err := mc.RemoveObject(ctx, bucketName, "bundles", minio.RemoveObjectOptions{ForceDelete: true}); err != nil {
 			t.Errorf("error removing object: %v", err)
@@ -99,10 +100,6 @@ func TestRenderBundleByIdHandler(t *testing.T) {
 
 		if err := mc.RemoveBucket(ctx, bucketName); err != nil {
 			t.Errorf("error removing bucket: %v", err)
-		}
-
-		if err := s.Instance.Shutdown(); err != nil {
-			t.Errorf("error shutting down server: %v", err)
 		}
 	})
 
