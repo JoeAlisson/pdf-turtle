@@ -8,7 +8,7 @@ require (
 	github.com/alexflint/go-arg v1.4.3
 	github.com/aymerick/raymond v2.0.2+incompatible
 	github.com/boombuler/barcode v1.0.1
-	github.com/chromedp/cdproto v0.0.0-20240417023356-ab6d61991462
+	github.com/chromedp/cdproto v0.0.0-20240421230201-ab917191657d
 	github.com/chromedp/chromedp v0.9.5
 	github.com/flosch/pongo2/v5 v5.0.0
 	github.com/gofiber/fiber/v2 v2.52.4
