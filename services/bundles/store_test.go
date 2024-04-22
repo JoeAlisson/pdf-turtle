@@ -5,18 +5,44 @@ package bundles
 import (
 	"bytes"
 	"context"
+	"github.com/minio/minio-go/v7/pkg/credentials"
+	"os"
 	"testing"
 
 	"github.com/minio/minio-go/v7"
 )
 
 func TestMinioStore_Save(t *testing.T) {
-	// TODO use var envs
+	ctx := context.Background()
+	endpoint := getEnvOrDefault("S3_ENDPOINT", "localhost:9000")
+	accessKey := getEnvOrDefault("S3_ACCESS_KEY", "minio")
+	secretKey := getEnvOrDefault("S3_SECRET_KEY", "minio123")
+	bucketName := "test-save-html-bundle"
+
+	mc, err := minio.New(endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
+		Secure: false,
+	})
+	if err != nil {
+		t.Fatalf("error creating minio client: %v", err)
+	}
+
+	exists, err := mc.BucketExists(ctx, bucketName)
+	if err != nil {
+		t.Fatalf("error checking bucket: %v", err)
+	}
+
+	if !exists {
+		if err = mc.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{}); err != nil {
+			t.Fatalf("error creating bucket: %v", err)
+		}
+	}
+
 	store, err := NewMinioStore(MinioOptions{
-		Endpoint:  "localhost:9000", //os.Getenv("S3_ENDPOINT"),
-		AccessKey: "minio",          //os.Getenv("S3_ACCESS_KEY"),
-		SecretKey: "minio123",       //os.Getenv("S3_SECRET_KEY"),
-		Bucket:    "test",
+		Endpoint:  endpoint,
+		AccessKey: accessKey,
+		SecretKey: secretKey,
+		Bucket:    bucketName,
 		UseSSL:    false,
 	})
 
@@ -80,4 +106,11 @@ func TestMinioStore_Save(t *testing.T) {
 			t.Fatalf("error removing object: %v", err)
 		}
 	})
+}
+
+func getEnvOrDefault(key string, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
 }
