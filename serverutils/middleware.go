@@ -18,23 +18,7 @@ import (
 
 func ProvideUserCtxMiddleware(ctx context.Context) func(c fiber.Ctx) error {
 	return func(c fiber.Ctx) error {
-		combinedCtx, cancel := context.WithCancel(ctx)
-		defer cancel()
-
-		requestCtx := c.RequestCtx()
-		if requestCtx != nil {
-			go func() {
-				select {
-				case <-requestCtx.Done():
-					cancel()
-					return
-				case <-combinedCtx.Done():
-					return
-				}
-			}()
-		}
-
-		c.SetContext(combinedCtx)
+		c.SetContext(ctx)
 		return c.Next()
 	}
 }
