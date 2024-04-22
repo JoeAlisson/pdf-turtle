@@ -18,23 +18,7 @@ import (
 
 func ProvideUserCtxMiddleware(ctx context.Context) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
-		combinedCtx, cancel := context.WithCancel(ctx)
-		defer cancel()
-
-		requestCtx := c.Context()
-		if requestCtx != nil {
-			go func() {
-				select {
-					case <-	requestCtx.Done():
-						cancel()
-						return
-					case <-combinedCtx.Done():
-						return
-				}
-			}()
-		}
-
-		c.SetUserContext(combinedCtx)
+		c.SetUserContext(ctx)
 		return c.Next()
 	}
 }
@@ -88,7 +72,7 @@ func RecoverMiddleware() func(c *fiber.Ctx) error {
 				logRequestErr(c, rec)
 			}
 		}()
-		
+
 		err := c.Next()
 
 		if err != nil {
