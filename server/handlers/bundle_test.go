@@ -306,6 +306,10 @@ func TestGetHtmlBundleHandler(t *testing.T) {
 		t.Fatalf("error saving bundle: %v", err)
 	}
 
+	t.Cleanup(func() {
+		s.Close(ctx)
+	})
+
 	t.Run("Should get a html bundle", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/html-bundle/"+info.Id, nil)
 
@@ -452,6 +456,8 @@ func TestListHtmlBundleHandler(t *testing.T) {
 	}
 
 	t.Cleanup(func() {
+		s.Close(ctx)
+
 		if err = mc.RemoveObject(ctx, bucketName, "bundles",
 			minio.RemoveObjectOptions{ForceDelete: true}); err != nil {
 			t.Errorf("error removing object: %v", err)
