@@ -6,8 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       minio:
-        image: minio/minio:latest
-        options: --entrypoint "minio server /data --console-address ':9001'"
+        image: bitnami/minio:latest
         env:
           MINIO_ROOT_USER: minio
           MINIO_ROOT_PASSWORD: minio
