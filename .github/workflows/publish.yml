@@ -31,10 +31,10 @@ jobs:
         with:
           context: ./
           tags: |
-            ${{ env.DOCKERHUB_REPOSITORY}}:latest
-            ${{ env.DOCKERHUB_REPOSITORY}}:${{ github.ref.name }}
+            ${{ vars.DOCKERHUB_REPOSITORY }}:latest
+            ${{ vars.DOCKERHUB_REPOSITORY }}:${{ github.ref_name }}
             ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ github.ref.name }}
+            ghcr.io/${{ github.repository }}:${{ github.ref_name }}
           push: true
 
       - name: Docker Hub Description
