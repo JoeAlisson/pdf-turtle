@@ -8,6 +8,7 @@ jobs:
     uses: ./.github/workflows/tests.yml
   publish-container:
     runs-on: ubuntu-latest
+    needs: test-and-build
     steps:
       - name: lowercase github.repository
         run: echo "IMAGE_NAME=${GITHUB_REPOSITORY@L}" >> ${GITHUB_ENV}
