@@ -369,7 +369,7 @@ const {
   loadBundlesInfo,
   storeBundle,
   getBundle,
-} = useBundleHandling(renderTemplateData)
+} = useBundleHandling(renderTemplateData, settings)
 
 const uploadBundle = ref<QFile>()
 

@@ -1,4 +1,4 @@
-import { ref, watch } from "vue"
+import { ref, UnwrapNestedRefs, watch } from "vue"
 
 import JsZip from "jszip"
 import FileSaver from "file-saver"
@@ -62,10 +62,14 @@ export function packBundle(data: RenderTemplateDataViewModel, includedFiles = in
   return zip.generateAsync({ type: "blob" })
 }
 
-export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTemplateDataViewModel) {
+export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTemplateDataViewModel, settings: UnwrapNestedRefs<{
+  autoRenderDelay: number;
+  serverUrl: string;
+  secret: string
+}>) {
   const loadBundle = async (
     bundleBufferSrc: ArrayBuffer,
-    target: RenderTemplateDataViewModel = getBaseRenderData()
+    target: RenderTemplateDataViewModel = getBaseRenderData(),
   ): Promise<RenderTemplateDataViewModel> => {
     const zip = await JsZip.loadAsync(bundleBufferSrc)
 
@@ -112,7 +116,7 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
   }
 
   const downloadBundle = async (
-    only?: "documentWithoutHeaderAndFooter" | "onlyBody" | "onlyHeader" | "onlyFooter" | "onlyOptions" | "onlyAssets"
+    only?: "documentWithoutHeaderAndFooter" | "onlyBody" | "onlyHeader" | "onlyFooter" | "onlyOptions" | "onlyAssets",
   ) => {
     const includedFiles = ((): IncludedFiles | undefined => {
       switch (only) {
@@ -143,6 +147,8 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
       const res = await ListHtmlBundlesInfoService.htmlBundle({
         loading: false,
         responseType: "json",
+        baseURL: settings.serverUrl || undefined,
+        headers: !settings.secret ? undefined : { Authorization: `Bearer ${settings.secret}` },
       })
       return res.Items
     } catch (e) {
@@ -153,7 +159,10 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
 
   const getBundle = async (id: string): Promise<void> => {
     try {
-      const res = await fetch(`${serverBaseUrl}/api/html-bundle/${id}`)
+      const baseUrl = settings.serverUrl || serverBaseUrl
+      const res = await fetch(`${baseUrl}/api/html-bundle/${id}`, {
+        headers: !settings.secret ? undefined : { Authorization: `Bearer ${settings.secret}` },
+      })
       if (!res.ok) {
         bundleError.value = `Error loading bundle: ${res.statusText}`
         return
@@ -185,7 +194,9 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
         {
           loading: false,
           responseType: "json",
-        }
+          baseURL: settings.serverUrl || undefined,
+          headers: !settings.secret ? undefined : { Authorization: `Bearer ${settings.secret}` },
+        },
       )
       currentBundle.value = { id: res.id, name }
       dirty.value = false
