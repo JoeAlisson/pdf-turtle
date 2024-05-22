@@ -22,33 +22,33 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.16.11",
-    "axios": "^1.6.8",
+    "axios": "^1.7.2",
     "file-saver": "^2.0.5",
     "jszip": "^3.10.1",
     "monaco-editor": "^0.47.0",
-    "quasar": "^2.15.3",
+    "quasar": "^2.16.4",
     "uuid": "^9.0.1",
     "vue": "^3.4.21",
     "vue-router": "^4.3.2"
   },
   "devDependencies": {
-    "@quasar/vite-plugin": "^1.6.0",
+    "@quasar/vite-plugin": "^1.7.0",
     "@types/file-saver": "^2.0.7",
     "@types/json-schema": "^7.0.15",
     "@types/uuid": "^9.0.8",
-    "@typescript-eslint/eslint-plugin": "^7.7.0",
-    "@typescript-eslint/parser": "^7.7.0",
+    "@typescript-eslint/eslint-plugin": "^7.10.0",
+    "@typescript-eslint/parser": "^7.10.0",
     "@vitejs/plugin-vue": "^5.0.4",
     "@vue/cli-plugin-router": "~5.0.8",
     "eslint": "^8.57.0",
-    "eslint-plugin-vue": "^9.25.0",
+    "eslint-plugin-vue": "^9.26.0",
     "husky": "^9.0.11",
     "prettier": "~3.2.5",
-    "sass": "^1.75.0",
+    "sass": "^1.77.2",
     "sass-loader": "^14.2.1",
-    "swagger-axios-codegen": "^0.16.13",
+    "swagger-axios-codegen": "^0.16.14",
     "typescript": "^5.4.5",
-    "vite": "^5.2.10",
-    "vue-tsc": "^2.0.14"
+    "vite": "^5.2.11",
+    "vue-tsc": "^2.0.19"
   }
 }
