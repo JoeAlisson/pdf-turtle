@@ -76,6 +76,10 @@ func (s *Server) Serve(ctx context.Context) {
 		serverutils.RecoverMiddleware(),
 	)
 
+	if conf.Secret != "" {
+		api.Use(serverutils.SecretMiddleware(conf.Secret))
+	}
+
 	api.Post("/pdf/from/html/render", handlers.RenderPdfFromHtmlHandler).
 		Name("Render PDF from HTML")
 
@@ -99,10 +103,6 @@ func (s *Server) Serve(ctx context.Context) {
 
 	api.Get("/html-bundle/:id", handlers.GetHtmlBundleHandler).
 		Name("Get HTML-Bundle")
-
-	if conf.Secret != "" {
-		api.Use(serverutils.SecretMiddleware(conf.Secret))
-	}
 
 	// Swagger
 	app.Get("/swagger/*", fiberSwagger.WrapHandler)
@@ -140,7 +140,7 @@ func (s *Server) listenAndServe(servingAddr string) {
 func (s *Server) Close(ctx context.Context) {
 	log.Info().Msg("server: shutdown gracefully")
 	gracefullyShutdownTimeout := time.Duration(config.Get(ctx).GracefulShutdownTimeoutInSec) * time.Second
-	s.Instance.ShutdownWithTimeout(gracefullyShutdownTimeout)
+	_ = s.Instance.ShutdownWithTimeout(gracefullyShutdownTimeout)
 }
 
 func servePlaygroundFronted(app *fiber.App) {
