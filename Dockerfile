@@ -29,7 +29,10 @@ RUN npm run build
 FROM chromedp/headless-shell:124.0.6367.60 AS runtime
 WORKDIR /app
 
-RUN apt update && apt install -y ca-certificates fonts-open-sans fonts-roboto fonts-noto-color-emoji && apt clean && rm -rf /var/lib/apt/lists/*
+RUN apt update && \
+    apt install -y ca-certificates fonts-noto-color-emoji fonts-open-sans fonts-roboto && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/*
 
 ENV LANG en-US.UTF-8
 ENV LOG_LEVEL_DEBUG false

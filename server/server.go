@@ -138,7 +138,7 @@ func (s *Server) listenAndServe(servingAddr string) {
 func (s *Server) Close(ctx context.Context) {
 	log.Info().Msg("server: shutdown gracefully")
 	gracefullyShutdownTimeout := time.Duration(config.Get(ctx).GracefulShutdownTimeoutInSec) * time.Second
-	s.Instance.ShutdownWithTimeout(gracefullyShutdownTimeout)
+	_ = s.Instance.ShutdownWithTimeout(gracefullyShutdownTimeout)
 }
 
 func servePlaygroundFronted(app *fiber.App) {
