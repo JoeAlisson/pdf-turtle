@@ -1,4 +1,4 @@
-FROM golang:alpine3.19 AS build-service
+FROM golang:1.24-alpine AS build-service
 WORKDIR /build
 
 COPY go.mod go.sum ./
@@ -17,7 +17,7 @@ COPY main.go .
 RUN go build -o pdf-turtle
 
 
-FROM node:21.7.1-alpine3.19 AS build-playground
+FROM node:22-alpine AS build-playground
 WORKDIR /app
 COPY .playground/package*.json ./
 RUN npm ci --ignore-scripts
@@ -26,7 +26,7 @@ COPY .playground/ ./
 RUN npm run build
 
 
-FROM chromedp/headless-shell:124.0.6367.60 AS runtime
+FROM chromedp/headless-shell:139.0.7232.3 AS runtime
 WORKDIR /app
 
 RUN apt update && \
