@@ -3,13 +3,13 @@ package renderer
 import (
 	"bytes"
 	"context"
-	"github.com/lucas-gaitzsch/pdf-turtle/config"
-	"github.com/lucas-gaitzsch/pdf-turtle/utils"
 	"io"
 	"testing"
 
+	"github.com/lucas-gaitzsch/pdf-turtle/config"
 	"github.com/lucas-gaitzsch/pdf-turtle/models"
 	"github.com/lucas-gaitzsch/pdf-turtle/services/templating/templateengines"
+	"github.com/lucas-gaitzsch/pdf-turtle/utils"
 	"github.com/lucas-gaitzsch/pdf-turtle/utils/logging"
 )
 

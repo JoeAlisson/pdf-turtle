@@ -18,24 +18,15 @@ import (
 //TODO: strip html with:  <script\b[^>]*>([\s\S]*?)<\/script>
 
 func NewChromiumBrowser(ctx context.Context) (context.Context, context.CancelFunc) {
-
 	opts := chromedp.DefaultExecAllocatorOptions[:]
-
-	opts = append(
-		opts,
-		chromedp.Headless,
-		chromedp.Flag("headless", true),
-		chromedp.Flag("hide-scrollbars", true),
-		chromedp.Flag("mute-audio", true),
-	)
-
-	if (config.Get(ctx).NoSandbox) {
+	if config.Get(ctx).NoSandbox {
+		log.Warn().Msg("chromium no-sandbox mode enabled")
 		opts = append(
 			opts,
-			chromedp.Flag("no-sandbox", true),
+			chromedp.NoSandbox,
 		)
 	}
-	
+
 	allocCtx, cancelAllocCtx := chromedp.NewExecAllocator(ctx, opts...)
 
 	cctx, cancelCctx := chromedp.NewContext(allocCtx)

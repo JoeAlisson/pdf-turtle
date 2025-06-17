@@ -5,9 +5,6 @@ package handlers_test
 import (
 	"bytes"
 	"context"
-	"github.com/lucas-gaitzsch/pdf-turtle/loopback"
-	"github.com/lucas-gaitzsch/pdf-turtle/services/assetsprovider"
-	"github.com/lucas-gaitzsch/pdf-turtle/services/renderer"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -18,16 +15,24 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 
 	"github.com/lucas-gaitzsch/pdf-turtle/config"
+	"github.com/lucas-gaitzsch/pdf-turtle/loopback"
 	"github.com/lucas-gaitzsch/pdf-turtle/server"
+	"github.com/lucas-gaitzsch/pdf-turtle/services/assetsprovider"
 	"github.com/lucas-gaitzsch/pdf-turtle/services/bundles"
+	"github.com/lucas-gaitzsch/pdf-turtle/services/renderer"
+	"github.com/lucas-gaitzsch/pdf-turtle/utils"
 )
 
-func TestRenderBundleByIdHandler(t *testing.T) {
-	ctx := context.Background()
+func TestRenderBundleByNameHandler(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	ctx = getContextWithTestConfig(ctx)
+
 	endpoint := getEnvOrDefault("S3_ENDPOINT", "localhost:9000")
 	accessKey := getEnvOrDefault("S3_ACCESS_KEY", "minio")
 	secretKey := getEnvOrDefault("S3_SECRET_KEY", "minio123")
-	bucketName := "test-render-bundle-by-id"
+	bucketName := "test-render-bundle-by-name"
 
 	mc, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
@@ -134,4 +139,11 @@ func TestRenderBundleByIdHandler(t *testing.T) {
 			t.Errorf("expected content type application/pdf, got %s", dataType)
 		}
 	})
+}
+
+func getContextWithTestConfig(parentCtx context.Context) context.Context {
+	c := &config.Config{}
+	utils.ReflectDefaultValues(c)
+	c.NoSandbox = true
+	return config.ContextWithConfig(parentCtx, *c)
 }
