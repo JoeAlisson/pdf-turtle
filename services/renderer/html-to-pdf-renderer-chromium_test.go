@@ -125,7 +125,7 @@ func TestRenderHugeHtmlAsPdf(t *testing.T) {
 	}
 }
 
-func getContextWithTestConfig(parentCtx context.Context) context.Context  {	
+func getContextWithTestConfig(parentCtx context.Context) context.Context  {
 	c := &config.Config{}
 	utils.ReflectDefaultValues(c)
 	c.NoSandbox = true
