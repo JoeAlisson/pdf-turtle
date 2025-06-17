@@ -2,16 +2,16 @@
   <div class="q-pa-lg">
     <table>
       <tbody>
-      <tr>
-        <td>Author:</td>
-        <td>Lucas Gaitzsch</td>
-      </tr>
-      <tr>
-        <td>Sourcecode and contribution:</td>
-        <td>
-          <a :href="githubUrl">{{ githubUrl }}</a>
-        </td>
-      </tr>
+        <tr>
+          <td>Author:</td>
+          <td>Lucas Gaitzsch</td>
+        </tr>
+        <tr>
+          <td>Sourcecode and contribution:</td>
+          <td>
+            <a :href="githubUrl">{{ githubUrl }}</a>
+          </td>
+        </tr>
       </tbody>
     </table>
   </div>
