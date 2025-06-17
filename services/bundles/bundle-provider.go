@@ -20,20 +20,19 @@ type InfoReader interface {
 }
 
 type Info struct {
-	Id             string     `json:"id,omitempty"`
 	Name           string     `json:"name,omitempty"`
 	TemplateEngine string     `json:"templateEngine,omitempty"`
 	Data           InfoReader `json:"data,omitempty"`
 	Size           int64      `json:"size,omitempty"`
 	ContentType    string     `json:"contentType,omitempty"`
-	FileName       string     `json:"fileName,omitempty"`
+	RenameFrom     string     `json:"renameFrom,omitempty"`
 }
 
 type Store interface {
-	Save(ctx context.Context, info Info) (uuid.UUID, error)
+	Save(ctx context.Context, info Info) error
 	Delete(ctx context.Context, id uuid.UUID) error
-	Get(ctx context.Context, id uuid.UUID) (Info, error)
-	ListInfo(ctx context.Context) (InfoList, error)
+	Get(ctx context.Context, name string) (Info, error)
+	ListInfo(ctx context.Context, prefix string) (InfoList, error)
 }
 
 func NewBundleProviderService(s Store) *BundleProviderService {
@@ -84,7 +83,7 @@ func (bps *BundleProviderService) GetById(id uuid.UUID) (BundleReader, bool) {
 	return b, ok
 }
 
-func (bps *BundleProviderService) Save(ctx context.Context, info Info) (uuid.UUID, error) {
+func (bps *BundleProviderService) Save(ctx context.Context, info Info) error {
 	return bps.Store.Save(ctx, info)
 }
 
@@ -92,10 +91,10 @@ func (bps *BundleProviderService) DeleteFromStore(ctx context.Context, id uuid.U
 	return bps.Store.Delete(ctx, id)
 }
 
-func (bps *BundleProviderService) GetFromStore(ctx context.Context, id uuid.UUID) (Info, error) {
-	return bps.Store.Get(ctx, id)
+func (bps *BundleProviderService) GetFromStore(ctx context.Context, name string) (Info, error) {
+	return bps.Store.Get(ctx, name)
 }
 
-func (bps *BundleProviderService) ListInfoFromStore(ctx context.Context) (InfoList, error) {
-	return bps.Store.ListInfo(ctx)
+func (bps *BundleProviderService) ListInfoFromStore(ctx context.Context, prefix string) (InfoList, error) {
+	return bps.Store.ListInfo(ctx, prefix)
 }
