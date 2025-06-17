@@ -24,9 +24,7 @@ import (
 )
 
 func TestRenderBundleByNameHandler(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
+	ctx := context.Background()
 	ctx = getContextWithTestConfig(ctx)
 
 	endpoint := getEnvOrDefault("S3_ENDPOINT", "localhost:9000")
