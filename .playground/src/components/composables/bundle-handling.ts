@@ -21,8 +21,8 @@ type IncludedFiles = {
 }
 
 type BundleInfo = {
-  id: string
   name: string
+  renamedFrom?: string
 }
 
 const includedFilesAll: IncludedFiles = {
@@ -157,10 +157,10 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
     return []
   }
 
-  const getBundle = async (id: string): Promise<void> => {
+  const getBundle = async (name: string): Promise<void> => {
     try {
       const baseUrl = settings.serverUrl || serverBaseUrl
-      const res = await fetch(`${baseUrl}/api/html-bundle/${id}`, {
+      const res = await fetch(`${baseUrl}/api/html-bundle/${encodeURIComponent(name)}`, {
         headers: !settings.secret ? undefined : { Authorization: `Bearer ${settings.secret}` },
       })
       if (!res.ok) {
@@ -174,31 +174,31 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
       const engine = data.get("templateEngine") as keyof typeof EnumRenderTemplateDataTemplateEngine
       reactiveRenderTemplateDataViewModel.templateEngine = EnumRenderTemplateDataTemplateEngine[engine]
 
-      currentBundle.value = { id, name: data.get("name") as string }
+      currentBundle.value = { name: data.get("name") as string }
       dirty.value = false
     } catch (e) {
       bundleError.value = `Error loading bundle: ${e}`
     }
   }
 
-  const storeBundle = async (name: string): Promise<string> => {
+  const storeBundle = async (name: string, renameFrom?: string): Promise<string> => {
     try {
       const bundle = await packBundle(reactiveRenderTemplateDataViewModel)
       const res = await SaveHtmlBundleService.htmlBundle(
         {
           bundle,
           name,
-          id: currentBundle.value?.id ?? "",
-          templateEngine: reactiveRenderTemplateDataViewModel.templateEngine,
+          templateEngine: reactiveRenderTemplateDataViewModel.templateEngine ?? 'golang',
+          renameFrom,
         },
         {
-          loading: false,
+          loading: true,
           responseType: "json",
           baseURL: settings.serverUrl || undefined,
           headers: !settings.secret ? undefined : { Authorization: `Bearer ${settings.secret}` },
         },
       )
-      currentBundle.value = { id: res.id, name }
+      currentBundle.value = { name }
       dirty.value = false
       return res.id
     } catch (e) {
@@ -230,8 +230,8 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
   })
 
   window.onbeforeunload = (e) => {
-    if (currentBundle.value?.id) {
-      localStorage.setItem("currentBundle", currentBundle.value.id)
+    if (currentBundle.value?.name) {
+      localStorage.setItem("currentBundle", currentBundle.value.name)
     }
     if (dirty.value) {
       e.preventDefault()

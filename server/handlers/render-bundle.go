@@ -3,10 +3,10 @@ package handlers
 import (
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/lucas-gaitzsch/pdf-turtle/config"
 	"github.com/lucas-gaitzsch/pdf-turtle/services"
 	"mime/multipart"
+	"net/url"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -20,7 +20,7 @@ const (
 	formDataKeyModel          = "model"
 	formDataKeyTemplateEngine = "templateEngine"
 	formDataKeyName           = "name"
-	formDataKeyId             = "id"
+	formDataKeyRenameFrom     = "renameFrom"
 )
 
 // RenderBundleHandler godoc
@@ -98,7 +98,7 @@ func createBundle(bundlesFromForm []*multipart.FileHeader) (*bundles.Bundle, err
 	return bundle, nil
 }
 
-// RenderBundleByIdHandler godoc
+// RenderBundleByNameHandler godoc
 // @Summary      Render PDF from bundle by ID
 // @Description  Returns PDF file generated from bundle (Zip-File) of HTML or HTML template of body, header, footer and assets.
 // @Tags         Render HTML-Bundle
@@ -106,20 +106,20 @@ func createBundle(bundlesFromForm []*multipart.FileHeader) (*bundles.Bundle, err
 // @Produce      application/pdf
 // @Param        id  path  string  true  "ID of the bundle"
 // @Success      200  "PDF File"
-// @Router       /api/pdf/from/html-bundle/{id} [post]
-func RenderBundleByIdHandler(c *fiber.Ctx) error {
+// @Router       /api/pdf/from/html-bundle/{name} [post]
+func RenderBundleByNameHandler(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 
 	bundleProvider, ok := ctx.Value(config.ContextKeyBundleProviderService).(services.BundleProviderService)
 	if !ok {
 		return bundleProviderNotFound
 	}
-	id, err := uuid.Parse(c.Params("id"))
+	name, err := url.PathUnescape(c.Params("name"))
 	if err != nil {
-		return fmt.Errorf("invalid id: %w", err)
+		return fmt.Errorf("invalid name: %w", err)
 	}
 
-	info, err := bundleProvider.GetFromStore(ctx, id)
+	info, err := bundleProvider.GetFromStore(ctx, name)
 	if err != nil {
 		return err
 	}

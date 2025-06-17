@@ -15,7 +15,7 @@
 
         <q-card-section>
           <q-list bordered v-if="!bundleDialog.saving && bundleDialog.bundles && bundleDialog.bundles.length > 0">
-            <q-item clickable v-for="bundle in bundleDialog.bundles" :key="bundle.id" @click="loadBundle(bundle.id)">
+            <q-item clickable v-for="bundle in bundleDialog.bundles" :key="bundle.name" @click="loadBundle(bundle.name)">
               <q-item-section>
                 <q-item-label>{{ bundle.name }}</q-item-label>
               </q-item-section>
@@ -225,7 +225,8 @@
           <q-bar v-if="currentBundle" dense>
             <div class="cursor-pointer" style="max-width: fit-content">
               Current Template: {{ currentBundle.name }}
-              <q-popup-edit v-model="currentBundle.name" class="bg-accent text-white" v-slot="scope">
+              <q-popup-edit v-model="currentBundle.name" class="bg-accent text-white" v-slot="scope"
+                    @save="(value: string, initial: string) => renameBundle(value, initial)">
                 <q-input
                   dark
                   color="white"
@@ -247,12 +248,12 @@
               square
               flat
               :icon="mdiContentCopy"
-              @click="copyToClipboard(currentBundle.id)"
-              title="Copy bundle id to clipboard"
+              @click="copyToClipboard(currentBundle.name)"
+              title="Copy bundle name to clipboard"
             >
               <q-popup-proxy>
                 <q-banner class="bg-primary">
-                  Bundle id copied to clipboard
+                  Bundle name copied to clipboard
                 </q-banner>
               </q-popup-proxy>
             </q-btn>
@@ -332,7 +333,7 @@ import { QFile } from "quasar"
 type BundleDialog = {
   title: string
   show: boolean
-  bundles: { id: string; name: string }[]
+  bundles: { name: string }[]
   saving: boolean
   bundleName: string
 }
@@ -378,14 +379,17 @@ function openBundle() {
 }
 
 function loadEmptyData() {
+  cleanLocalStorageBundle()
   Object.assign(renderTemplateData, getBaseRenderData(true))
   currentBundle.value = null
+  bundleDialog.value.bundleName = ""
 }
 
 function loadSampleData() {
+  cleanLocalStorageBundle()
   Object.assign(renderTemplateData, getBaseRenderData())
   currentBundle.value = null
-  cleanLocalStorageBundle()
+  bundleDialog.value.bundleName = ""
 }
 
 async function openLoadBundleDialog() {
@@ -406,17 +410,30 @@ function openSaveBundleDialog() {
   bundleDialog.value.show = true
 }
 
-async function saveBundle(rename: boolean = false) {
+async function saveBundle() {
   const name = currentBundle.value?.name ?? bundleDialog.value.bundleName
-  if (!name || rename) {
+  if (!name) {
     openSaveBundleDialog()
     return
   }
-  await storeBundle(name)
+  await storeBundle(name, currentBundle.value?.renamedFrom)
 }
 
 async function copyToClipboard(text: string) {
   await navigator.clipboard.writeText(text)
+}
+
+function renameBundle(name: string, old: string) {
+  if (!currentBundle.value) return
+
+  if (name === old || name === currentBundle.value.renamedFrom) {
+    currentBundle.value.renamedFrom = undefined
+    return
+  }
+
+  if (currentBundle.value.renamedFrom) return
+
+  currentBundle.value.renamedFrom = old
 }
 
 requestPdf()

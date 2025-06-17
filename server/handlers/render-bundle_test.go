@@ -10,10 +10,10 @@ import (
 	"github.com/lucas-gaitzsch/pdf-turtle/services/renderer"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 
@@ -76,16 +76,14 @@ func TestRenderBundleByIdHandler(t *testing.T) {
 	zipBuf := createZipFileBuffer(files)
 
 	info := bundles.Info{
-		Id:             uuid.NewString(),
 		Name:           "pre-save-test-render-bundle-by-id",
 		TemplateEngine: "golang",
 		Data:           bytes.NewReader(zipBuf.Bytes()),
 		Size:           int64(zipBuf.Len()),
 		ContentType:    "application/zip",
-		FileName:       "bundle.zip",
 	}
 
-	_, err = bStore.Save(ctx, info)
+	err = bStore.Save(ctx, info)
 	if err != nil {
 		t.Fatalf("error saving bundle: %v", err)
 	}
@@ -105,7 +103,7 @@ func TestRenderBundleByIdHandler(t *testing.T) {
 
 	t.Run("Should render bundle by id", func(t *testing.T) {
 		model := `{"Name": "Render Bundler", "Footer": "Render Footer"}`
-		req := httptest.NewRequest("POST", "/api/pdf/from/html-bundle/"+info.Id, strings.NewReader(model))
+		req := httptest.NewRequest("POST", "/api/pdf/from/html-bundle/"+url.PathEscape(info.Name), strings.NewReader(model))
 
 		resp, err := s.Instance.Test(req, -1)
 		if err != nil {

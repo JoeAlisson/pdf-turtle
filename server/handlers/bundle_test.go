@@ -10,9 +10,9 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 
@@ -94,20 +94,17 @@ func TestSaveHtmlBundleHandler(t *testing.T) {
 		}
 
 		response := struct {
-			ID string `json:"id"`
+			Name string `json:"name"`
 		}{}
 
 		_ = json.NewDecoder(resp.Body).Decode(&response)
-		if response.ID == "" {
-			t.Error("expected id to be set")
+		if response.Name == "" {
+			t.Error("expected Name to be set")
 		}
 
-		id, err := uuid.Parse(response.ID)
-		if err != nil {
-			t.Fatalf("error parsing id: %v", err)
-		}
+		name := response.Name
 
-		info, err := bStore.Get(ctx, id)
+		info, err := bStore.Get(ctx, name)
 		if err != nil {
 			t.Fatalf("error getting bundle from store: %v", err)
 		}
@@ -120,20 +117,12 @@ func TestSaveHtmlBundleHandler(t *testing.T) {
 			t.Errorf("expected template engine to be golang, got %s", info.TemplateEngine)
 		}
 
-		if info.FileName != "bundle.zip" {
-			t.Errorf("expected filename to be bundle.zip, got %s", info.FileName)
-		}
-
 		if info.ContentType != "application/octet-stream" {
 			t.Errorf("expected content type to be application/octet-stream, got %s", info.ContentType)
 		}
 
 		if info.Size != int64(zipBuf.Len()) {
 			t.Errorf("expected size to be %d, got %d", zipBuf.Len(), info.Size)
-		}
-
-		if info.Id != response.ID {
-			t.Errorf("expected id to be %s, got %s", id, info.Id)
 		}
 
 		data := new(bytes.Buffer)
@@ -165,10 +154,10 @@ func TestSaveHtmlBundleHandler(t *testing.T) {
 		}
 
 		response := struct {
-			ID string `json:"id"`
+			Name string `json:"name"`
 		}{}
 		_ = json.NewDecoder(resp.Body).Decode(&response)
-		if response.ID == "" {
+		if response.Name == "" {
 			t.Fatalf("expected id to be set")
 		}
 
@@ -179,7 +168,7 @@ func TestSaveHtmlBundleHandler(t *testing.T) {
 		}
 
 		newZipBuf := createZipFileBuffer(f)
-		metadata["id"] = response.ID
+
 		buf, contentType, err = createRequestBody(newZipBuf, metadata)
 		if err != nil {
 			t.Fatalf("error creating request body: %v", err)
@@ -199,11 +188,9 @@ func TestSaveHtmlBundleHandler(t *testing.T) {
 
 		_ = json.NewDecoder(resp.Body).Decode(&response)
 
-		id, err := uuid.Parse(response.ID)
-		if err != nil {
-			t.Fatalf("error parsing id: %v", err)
-		}
-		info, err := bStore.Get(ctx, id)
+		name := response.Name
+
+		info, err := bStore.Get(ctx, name)
 		if err != nil {
 			t.Fatalf("error getting bundle from store: %v", err)
 		}
@@ -216,20 +203,12 @@ func TestSaveHtmlBundleHandler(t *testing.T) {
 			t.Errorf("expected template engine to be golang, got %s", info.TemplateEngine)
 		}
 
-		if info.FileName != "bundle.zip" {
-			t.Errorf("expected filename to be bundle.zip, got %s", info.FileName)
-		}
-
 		if info.ContentType != "application/octet-stream" {
 			t.Errorf("expected content type to be application/octet-stream, got %s", info.ContentType)
 		}
 
 		if info.Size != int64(newZipBuf.Len()) {
 			t.Errorf("expected size to be %d, got %d", newZipBuf.Len(), info.Size)
-		}
-
-		if info.Id != response.ID {
-			t.Errorf("expected id to be %s, got %s", id, info.Id)
 		}
 
 		data := new(bytes.Buffer)
@@ -292,16 +271,14 @@ func TestGetHtmlBundleHandler(t *testing.T) {
 	zipBuf := createZipFileBuffer(files)
 
 	info := bundles.Info{
-		Id:             uuid.NewString(),
 		Name:           "pre-save-test-get-bundle",
 		TemplateEngine: "golang",
 		Data:           bytes.NewReader(zipBuf.Bytes()),
 		Size:           int64(zipBuf.Len()),
 		ContentType:    "application/zip",
-		FileName:       "bundle.zip",
 	}
 
-	_, err = bStore.Save(ctx, info)
+	err = bStore.Save(ctx, info)
 	if err != nil {
 		t.Fatalf("error saving bundle: %v", err)
 	}
@@ -311,7 +288,7 @@ func TestGetHtmlBundleHandler(t *testing.T) {
 	})
 
 	t.Run("Should get a html bundle", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/api/html-bundle/"+info.Id, nil)
+		req := httptest.NewRequest(http.MethodGet, "/api/html-bundle/"+url.PathEscape(info.Name), nil)
 
 		resp, err := s.Instance.Test(req, -1)
 		if err != nil {
@@ -336,9 +313,6 @@ func TestGetHtmlBundleHandler(t *testing.T) {
 			t.Fatalf("error reading form: %v", err)
 		}
 		fileHeader := form.File["bundle"][0]
-		if fileHeader.Filename != "bundle.zip" {
-			t.Errorf("expected filename to be bundle.zip, got %s", fileHeader.Filename)
-		}
 
 		if fileHeader.Header.Get("Content-Type") != "application/zip" {
 			t.Errorf("expected content type to be application/zip, got %s", fileHeader.Header.Get("Content-Type"))
@@ -371,11 +345,6 @@ func TestGetHtmlBundleHandler(t *testing.T) {
 		if templateEngine != "golang" {
 			t.Errorf("expected template engine to be golang, got %s", templateEngine)
 		}
-
-		id := form.Value["id"][0]
-		if id != info.Id {
-			t.Errorf("expected id to be %s, got %s", info.Id, id)
-		}
 	})
 }
 
@@ -390,6 +359,10 @@ func TestListHtmlBundleHandler(t *testing.T) {
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
 		Secure: false,
 	})
+
+	if err != nil {
+		t.Fatalf("error creating minio client: %v", err)
+	}
 
 	exists, err := mc.BucketExists(ctx, bucketName)
 	if err != nil {
@@ -428,29 +401,26 @@ func TestListHtmlBundleHandler(t *testing.T) {
 	zipBuf := createZipFileBuffer(files)
 
 	info := bundles.Info{
-		Id:             uuid.NewString(),
 		Name:           "pre-save-test-list-bundle",
 		TemplateEngine: "golang",
 		Data:           bytes.NewReader(zipBuf.Bytes()),
 		Size:           int64(zipBuf.Len()),
 		ContentType:    "application/zip",
-		FileName:       "bundle.zip",
 	}
 
-	_, err = bStore.Save(ctx, info)
+	err = bStore.Save(ctx, info)
 	if err != nil {
 		t.Fatalf("error saving bundle: %v", err)
 	}
 
 	info2 := bundles.Info{
-		Id:             uuid.NewString(),
 		Name:           "pre-save-test-list-bundle-2",
 		TemplateEngine: "golang",
 		Data:           bytes.NewReader(zipBuf.Bytes()),
 		Size:           int64(zipBuf.Len()),
 		ContentType:    "application/zip",
 	}
-	_, err = bStore.Save(ctx, info2)
+	err = bStore.Save(ctx, info2)
 	if err != nil {
 		t.Fatalf("error saving bundle: %v", err)
 	}
@@ -502,7 +472,7 @@ func TestListHtmlBundleHandler(t *testing.T) {
 
 func expectedBundleInList(items []bundles.Info, info bundles.Info) bool {
 	for _, item := range items {
-		if item.Id == info.Id && item.Name == info.Name {
+		if item.Name == info.Name {
 			return true
 		}
 	}

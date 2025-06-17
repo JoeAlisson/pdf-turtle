@@ -6,10 +6,9 @@ import (
 	"io"
 	"mime/multipart"
 	"net/textproto"
+	"net/url"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
-
 	"github.com/lucas-gaitzsch/pdf-turtle/config"
 	"github.com/lucas-gaitzsch/pdf-turtle/services"
 	"github.com/lucas-gaitzsch/pdf-turtle/services/bundles"
@@ -23,10 +22,10 @@ var bundleProviderNotFound = errors.New("bundle provider service not found in co
 // @Tags         Save HTML-Bundle
 // @Accept       multipart/form-data
 // @Produce      application/json
-// @Param        bundle          formData  file    true   "Bundle Zip-File"
-// @Param        name            formData  string  true   "Name of the bundle"
-// @Param        id              formData  string  false  "ID of the bundle"
-// @Param        templateEngine  formData  string  false  "Template engine to use for template"
+// @Param        bundle          formData  file     true   "Bundle Zip-File"
+// @Param        name            formData  string   true   "Name of the bundle"
+// @Param        templateEngine  formData  string   true   "Template engine to use for template"
+// @Param        rename  	     formData  boolean  false  "If true, the bundle will be renamed"
 // @Success      201             "Created"
 // @Router       /api/html-bundle [post]
 func SaveHtmlBundleHandler(c *fiber.Ctx) error {
@@ -54,27 +53,26 @@ func SaveHtmlBundleHandler(c *fiber.Ctx) error {
 	}
 
 	templateEngine, _ := getValueFromForm(form.Value, formDataKeyTemplateEngine)
+	renameFrom, _ := getValueFromForm(form.Value, formDataKeyRenameFrom)
 	name, ok := getValueFromForm(form.Value, formDataKeyName)
-	bundleId, _ := getValueFromForm(form.Value, formDataKeyId)
 	if !ok {
 		name = "template-" + randString()
 	}
 
 	info := bundles.Info{
-		Id:             bundleId,
 		Name:           name,
 		TemplateEngine: templateEngine,
-		FileName:       fb.Filename,
 		Data:           f,
 		Size:           fb.Size,
 		ContentType:    fb.Header.Get("Content-Type"),
+		RenameFrom:     renameFrom,
 	}
 
-	id, err := bundleProvider.Save(ctx, info)
+	err = bundleProvider.Save(ctx, info)
 	if err != nil {
 		return err
 	}
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"id": id})
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"name": name})
 }
 
 // GetHtmlBundleHandler godoc
@@ -84,7 +82,7 @@ func SaveHtmlBundleHandler(c *fiber.Ctx) error {
 // @Produce      multipart/form-data
 // @Param        id  path  string  true  "ID of the bundle"
 // @Success      200  "OK"
-// @Router       /api/html-bundle/{id} [get]
+// @Router       /api/html-bundle/{name} [get]
 func GetHtmlBundleHandler(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	bundleProvider, ok := ctx.Value(config.ContextKeyBundleProviderService).(services.BundleProviderService)
@@ -92,12 +90,12 @@ func GetHtmlBundleHandler(c *fiber.Ctx) error {
 		return bundleProviderNotFound
 	}
 
-	id, err := uuid.Parse(c.Params("id"))
+	name, err := url.PathUnescape(c.Params("name"))
 	if err != nil {
 		return err
 	}
 
-	info, err := bundleProvider.GetFromStore(ctx, id)
+	info, err := bundleProvider.GetFromStore(ctx, name)
 	if err != nil {
 		return err
 	}
@@ -108,7 +106,7 @@ func GetHtmlBundleHandler(c *fiber.Ctx) error {
 
 	h := make(textproto.MIMEHeader)
 	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`,
-		escapeQuotes(formDataKeyBundle), escapeQuotes(info.FileName)))
+		escapeQuotes(formDataKeyBundle), "bundle"))
 	h.Set("Content-Type", info.ContentType)
 
 	ff, err := w.CreatePart(h)
@@ -124,10 +122,6 @@ func GetHtmlBundleHandler(c *fiber.Ctx) error {
 		return err
 	}
 
-	if err = w.WriteField(formDataKeyId, info.Id); err != nil {
-		return err
-	}
-
 	if err = w.WriteField(formDataKeyTemplateEngine, info.TemplateEngine); err != nil {
 		return err
 	}
@@ -138,6 +132,7 @@ func GetHtmlBundleHandler(c *fiber.Ctx) error {
 // @Summary      List HTML bundles from server
 // @Description  List HTML bundles from server, allowing to render PDFs from it at a later time
 // @Tags         List HTML-Bundles Info
+// @Query        prefix  string  false  "Prefix to filter bundles by name"
 // @Produce      application/json
 // @Success      200  "OK"
 // @Router       /api/html-bundle [get]
@@ -147,7 +142,10 @@ func ListHtmlBundlesInfoHandler(c *fiber.Ctx) error {
 	if !ok {
 		return bundleProviderNotFound
 	}
-	list, err := bundleProvider.ListInfoFromStore(ctx)
+
+	prefix := c.Query("prefix", "")
+
+	list, err := bundleProvider.ListInfoFromStore(ctx, prefix)
 	if err != nil {
 		return err
 	}

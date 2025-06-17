@@ -92,8 +92,8 @@ func (s *Server) Serve(ctx context.Context) {
 	api.Post("/pdf/from/html-bundle/render", handlers.RenderBundleHandler).
 		Name("Render PDF from HTML-Bundle")
 
-	api.Post("/pdf/from/html-bundle/:id", handlers.RenderBundleByIdHandler).
-		Name("Render PDF from HTML-Bundle by ID")
+	api.Post("/pdf/from/html-bundle/:name", handlers.RenderBundleByNameHandler).
+		Name("Render PDF from HTML-Bundle by Name")
 
 	api.Post("/html-bundle", handlers.SaveHtmlBundleHandler).
 		Name("Save HTML-Bundle")
@@ -101,7 +101,7 @@ func (s *Server) Serve(ctx context.Context) {
 	api.Get("/html-bundle", handlers.ListHtmlBundlesInfoHandler).
 		Name("List HTML-Bundles Info")
 
-	api.Get("/html-bundle/:id", handlers.GetHtmlBundleHandler).
+	api.Get("/html-bundle/:name", handlers.GetHtmlBundleHandler).
 		Name("Get HTML-Bundle")
 
 	// Swagger

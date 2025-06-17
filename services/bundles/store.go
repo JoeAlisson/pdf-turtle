@@ -2,11 +2,11 @@ package bundles
 
 import (
 	"context"
-	"strconv"
-
 	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+	"strconv"
+	"strings"
 )
 
 const bundlePath = "bundles/"
@@ -58,39 +58,33 @@ func ensureBucketExists(mc *minio.Client, opt MinioOptions) error {
 	return err
 }
 
-func (m MinioStore) Save(ctx context.Context, info Info) (uuid.UUID, error) {
-	id := parseId(info.Id)
+func (m MinioStore) Save(ctx context.Context, info Info) error {
 	opt := minio.PutObjectOptions{
 		ContentType: info.ContentType,
 		UserMetadata: map[string]string{
-			"Id":              id.String(),
-			"Name":            info.Name,
-			"File-Name":       info.FileName,
 			"Size":            strconv.FormatInt(info.Size, 10),
 			"Template-Engine": info.TemplateEngine,
 		},
 	}
 
-	_, err := m.client.PutObject(ctx, m.bucket, bundlePath+id.String(), info.Data, info.Size, opt)
+	_, err := m.client.PutObject(ctx, m.bucket, bundlePath+info.Name, info.Data, info.Size, opt)
 	if err != nil {
-		return uuid.Nil, err
+		return err
 	}
-	return id, nil
-}
 
-func parseId(id string) uuid.UUID {
-	if r, err := uuid.Parse(id); err == nil {
-		return r
+	if info.RenameFrom != "" && info.RenameFrom != info.Name {
+		m.client.RemoveObject(ctx, m.bucket, bundlePath+info.RenameFrom, minio.RemoveObjectOptions{})
 	}
-	return uuid.New()
+
+	return nil
 }
 
 func (m MinioStore) Delete(ctx context.Context, id uuid.UUID) error {
 	return m.client.RemoveObject(ctx, m.bucket, bundlePath+id.String(), minio.RemoveObjectOptions{})
 }
 
-func (m MinioStore) Get(ctx context.Context, id uuid.UUID) (Info, error) {
-	obj, err := m.client.GetObject(ctx, m.bucket, bundlePath+id.String(), minio.GetObjectOptions{})
+func (m MinioStore) Get(ctx context.Context, name string) (Info, error) {
+	obj, err := m.client.GetObject(ctx, m.bucket, bundlePath+name, minio.GetObjectOptions{})
 	if err != nil {
 		return Info{}, err
 	}
@@ -101,20 +95,23 @@ func (m MinioStore) Get(ctx context.Context, id uuid.UUID) (Info, error) {
 	}
 
 	return Info{
-		Id:             id.String(),
-		Name:           info.UserMetadata["Name"],
+		Name:           info.Key[len(bundlePath):], // Remove the bundlePath prefix
 		TemplateEngine: info.UserMetadata["Template-Engine"],
-		FileName:       info.UserMetadata["File-Name"],
 		Data:           obj,
 		Size:           info.Size,
 		ContentType:    info.ContentType,
 	}, nil
 }
 
-func (m MinioStore) ListInfo(ctx context.Context) (InfoList, error) {
+func (m MinioStore) ListInfo(ctx context.Context, prefix string) (InfoList, error) {
+	if prefix != "" && !strings.HasSuffix(prefix, "/") {
+		prefix += "/"
+	}
+
 	infoChan := m.client.ListObjects(ctx, m.bucket, minio.ListObjectsOptions{
 		WithMetadata: true,
-		Prefix:       bundlePath,
+		Prefix:       bundlePath + prefix,
+		Recursive:    true,
 	})
 
 	var list InfoList
@@ -123,8 +120,9 @@ func (m MinioStore) ListInfo(ctx context.Context) (InfoList, error) {
 			return list, obj.Err
 		}
 		list.Items = append(list.Items, Info{
-			Id:   obj.UserMetadata["X-Amz-Meta-Id"],
-			Name: obj.UserMetadata["X-Amz-Meta-Name"],
+			Name:           obj.Key[len(bundlePath):], // Remove the bundlePath prefix
+			Size:           obj.Size,
+			TemplateEngine: obj.UserMetadata["X-Amz-Meta-Template-Engine"],
 		})
 	}
 	return list, nil

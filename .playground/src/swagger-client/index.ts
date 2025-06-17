@@ -58,10 +58,10 @@ export class SaveHtmlBundleService {
       bundle: any
       /** Name of the bundle */
       name: string
-      /** ID of the bundle */
-      id?: string
       /** Template engine to use for template */
-      templateEngine?: string
+      templateEngine: string
+      /** renaming the bundle? */
+      renameFrom?: string
     } = {} as any,
     options: IRequestOptions = {}
   ): Promise<any> {
@@ -70,48 +70,11 @@ export class SaveHtmlBundleService {
 
       const configs: IRequestConfig = getConfigs("post", "multipart/form-data", url, options)
 
-      let data = null
-      data = new FormData()
-      if (params["bundle"]) {
-        if (Object.prototype.toString.call(params["bundle"]) === "[object Array]") {
-          for (const item of params["bundle"]) {
-            data.append("bundle", item as any)
-          }
-        } else {
-          data.append("bundle", params["bundle"] as any)
-        }
-      }
-
-      if (params["name"]) {
-        if (Object.prototype.toString.call(params["name"]) === "[object Array]") {
-          for (const item of params["name"]) {
-            data.append("name", item as any)
-          }
-        } else {
-          data.append("name", params["name"] as any)
-        }
-      }
-
-      if (params["id"]) {
-        if (Object.prototype.toString.call(params["id"]) === "[object Array]") {
-          for (const item of params["id"]) {
-            data.append("id", item as any)
-          }
-        } else {
-          data.append("id", params["id"] as any)
-        }
-      }
-
-      if (params["templateEngine"]) {
-        if (Object.prototype.toString.call(params["templateEngine"]) === "[object Array]") {
-          for (const item of params["templateEngine"]) {
-            data.append("templateEngine", item as any)
-          }
-        } else {
-          data.append("templateEngine", params["templateEngine"] as any)
-        }
-      }
-
+      const data = new FormData()
+      data.append("bundle", params.bundle)
+      data.append("name", params.name)
+      data.append("templateEngine", params.templateEngine)
+      if (params.renameFrom) data.append("renameFrom", params.renameFrom)
       configs.data = data
 
       axios(configs, resolve, reject)
