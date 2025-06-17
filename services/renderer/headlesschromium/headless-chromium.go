@@ -18,7 +18,6 @@ import (
 //TODO: strip html with:  <script\b[^>]*>([\s\S]*?)<\/script>
 
 func NewChromiumBrowser(ctx context.Context) (context.Context, context.CancelFunc) {
-
 	opts := chromedp.DefaultExecAllocatorOptions[:]
 
 	opts = append(
@@ -32,7 +31,7 @@ func NewChromiumBrowser(ctx context.Context) (context.Context, context.CancelFun
 	if config.Get(ctx).NoSandbox {
 		opts = append(
 			opts,
-			chromedp.Flag("no-sandbox", true),
+			chromedp.NoSandbox,
 		)
 	}
 
