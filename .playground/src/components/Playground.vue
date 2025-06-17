@@ -225,8 +225,12 @@
           <q-bar v-if="currentBundle" dense>
             <div class="cursor-pointer" style="max-width: fit-content">
               Current Template: {{ currentBundle.name }}
-              <q-popup-edit v-model="currentBundle.name" class="bg-accent text-white" v-slot="scope"
-                    @save="(value: string, initial: string) => renameBundle(value, initial)">
+              <q-popup-edit
+                v-model="currentBundle.name"
+                class="bg-accent text-white"
+                v-slot="scope"
+                @save="(value: string, initial: string) => renameBundle(value, initial)"
+              >
                 <q-input
                   dark
                   color="white"

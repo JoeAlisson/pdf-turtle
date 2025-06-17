@@ -36,7 +36,7 @@ export const templateBody = `
 	<div id="echart-container" style="margin: 5mm 0; width:100%; height:6cm;">
 	</div>
 
-	<img style="width:100%; height: 4cm; object-fit: cover; border-radius:5mm" src="https://images.unsplash.com/photo-1543286386-2e659306cd6c?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80"/>
+	<img alt="grafico" style="width:100%; height: 4cm; object-fit: cover; border-radius:5mm" src="https://images.unsplash.com/photo-1543286386-2e659306cd6c?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80"/>
 
 	<table class="reduced" style="margin-top:3mm; font-size:10pt;">
 		<tr>
@@ -151,8 +151,7 @@ export const templateBody = `
 export const templateHeader = `
 <!DOCTYPE html>
 
-<html>
-
+<html lang="en">
 <head>
   <style>
   .header-container {
@@ -183,9 +182,9 @@ export const templateHeader = `
 export const templateFooter = `
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
 <body>
-  <div class=\"default-footer\"><div><span class=\"pageNumber\"></span> of <span class=\"totalPages\"></span></div></div>
+  <div class="default-footer"><div><span class="pageNumber"></span> of <span class="totalPages"></span></div></div>
 </body>
 </html>
 `.trimStart()
