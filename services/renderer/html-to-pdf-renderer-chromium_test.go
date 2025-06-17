@@ -3,6 +3,8 @@ package renderer
 import (
 	"bytes"
 	"context"
+	"github.com/lucas-gaitzsch/pdf-turtle/config"
+	"github.com/lucas-gaitzsch/pdf-turtle/utils"
 	"io"
 	"testing"
 
@@ -17,6 +19,8 @@ func TestRenderHtmlAsPdf(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	ctx = getContextWithTestConfig(ctx)
 
 	html := "<b>test"
 	renderer := NewAsyncHtmlRendererChromium(ctx)
@@ -49,6 +53,7 @@ func TestRenderHtmlAsPdfWithNilPointerBody(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	ctx = getContextWithTestConfig(ctx)
 	renderer := NewAsyncHtmlRendererChromium(ctx)
 	defer renderer.Close()
 
@@ -73,6 +78,7 @@ func TestRenderHugeHtmlAsPdf(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	ctx = getContextWithTestConfig(ctx)
 
 	data := generateRange(10_000)
 	template := `
@@ -125,4 +131,11 @@ func generateRange(until int) []int {
 	}
 
 	return res
+}
+
+func getContextWithTestConfig(parentCtx context.Context) context.Context {
+	c := &config.Config{}
+	utils.ReflectDefaultValues(c)
+	c.NoSandbox = true
+	return config.ContextWithConfig(parentCtx, *c)
 }
