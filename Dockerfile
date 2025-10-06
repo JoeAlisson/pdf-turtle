@@ -1,4 +1,4 @@
-FROM golang:1.24-alpine AS build-service
+FROM golang:1.25-alpine AS build-service
 WORKDIR /build
 
 COPY go.mod go.sum ./
@@ -26,7 +26,7 @@ COPY .playground/ ./
 RUN npm run build
 
 
-FROM chromedp/headless-shell:139.0.7232.3 AS runtime
+FROM chromedp/headless-shell:141.0.7390.55 AS runtime
 WORKDIR /app
 
 RUN apt update && \
@@ -34,13 +34,13 @@ RUN apt update && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
-ENV LANG en-US.UTF-8
-ENV LOG_LEVEL_DEBUG false
-ENV LOG_JSON_OUTPUT false
-ENV WORKER_INSTANCES 40
-ENV PORT 8000
-ENV SERVE_PLAYGROUND true
-ENV NO_SANDBOX true
+ENV LANG=en-US.UTF-8
+ENV LOG_LEVEL_DEBUG=false
+ENV LOG_JSON_OUTPUT=false
+ENV WORKER_INSTANCES=40
+ENV PORT=8000
+ENV SERVE_PLAYGROUND=true
+ENV NO_SANDBOX=true
 
 EXPOSE ${PORT}
 
