@@ -11,19 +11,24 @@ jobs:
         options: >-
           --entrypoint "/usr/bin/start.sh"
           --health-cmd "mc ready local"
+          --name minio
         ports:
           - 9000:9000
         env:
           MINIO_ROOT_USER: minio
           MINIO_ROOT_PASSWORD: minio12345
         volumes:
-          - $(pwd)/.github/scripts/start-minio-service.sh:/usr/bin/start.sh
+          - ${{ github.workspace }}/.github/scripts/start-minio-service.sh:/usr/bin/start.sh
     steps:
       - uses: actions/checkout@v4
       - uses: browser-actions/setup-chrome@latest
       - uses: actions/setup-go@v5
         with:
           go-version: '>=1.25.0'
+      - name: restart_minio
+        uses: docker://docker
+        with:
+          args: docker restart minio
       - name: Run vet
         run: go vet .
       - name: Tests
