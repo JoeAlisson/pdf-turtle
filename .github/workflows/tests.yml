@@ -7,8 +7,6 @@ jobs:
     services:
       minio:
         image: minio/minio:edge-cicd
-        options: >-
-          --health-cmd "mc ready local"
         ports:
           - 9000:9000
           - 9001:9001
