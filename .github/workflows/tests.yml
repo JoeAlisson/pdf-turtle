@@ -7,18 +7,14 @@ jobs:
     runs-on: ubuntu-latest
     services:
       minio:
-        image: minio/minio:latest-cicd
+        image: joealisson/minio:latest
         options: >-
-          --entrypoint "/usr/bin/start.sh"
           --health-cmd "mc ready local"
-          --name minio
         ports:
           - 9000:9000
         env:
           MINIO_ROOT_USER: minio
           MINIO_ROOT_PASSWORD: minio12345
-        volumes:
-          - ${{ github.workspace }}/.github/scripts/start-minio-service.sh:/usr/bin/start.sh
     steps:
       - uses: actions/checkout@v4
       - uses: browser-actions/setup-chrome@latest
