@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       minio:
-        image: bitnami/minio:latest
+        image: minio/minio:edge-cicd
         options: >-
           --health-cmd "mc ready local"
         ports:
