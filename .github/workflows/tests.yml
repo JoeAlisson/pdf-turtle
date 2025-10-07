@@ -9,7 +9,7 @@ jobs:
       minio:
         image: minio/minio:latest-cicd
         options: >-
-          --entrypoint "/usr/bin/start.sh
+          --entrypoint "/usr/bin/start.sh"
           --health-cmd "mc ready local"
         ports:
           - 9000:9000
