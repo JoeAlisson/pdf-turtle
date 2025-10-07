@@ -7,9 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       minio:
-        image: minio/minio:latest-cicd server
-        options: >-
-          --health-cmd "mc ready local"
+        image: minio/minio:latest-cicd
         ports:
           - 9000:9000
         env:
