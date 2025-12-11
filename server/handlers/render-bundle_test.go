@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gofiber/fiber/v3"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 
@@ -108,7 +109,7 @@ func TestRenderBundleByNameHandler(t *testing.T) {
 		model := `{"Name": "Render Bundler", "Footer": "Render Footer"}`
 		req := httptest.NewRequest("POST", "/api/pdf/from/html-bundle/"+url.PathEscape(info.Name), strings.NewReader(model))
 
-		resp, err := s.Instance.Test(req, -1)
+		resp, err := s.Instance.Test(req, fiber.TestConfig{Timeout: -1})
 		if err != nil {
 			t.Fatalf("error testing request: %v", err)
 		}

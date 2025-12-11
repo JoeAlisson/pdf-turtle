@@ -3,11 +3,12 @@ package handlers
 import (
 	"errors"
 	"fmt"
-	"github.com/lucas-gaitzsch/pdf-turtle/config"
-	"github.com/lucas-gaitzsch/pdf-turtle/services"
 	"mime/multipart"
 	"net/url"
 	"strings"
+
+	"github.com/lucas-gaitzsch/pdf-turtle/config"
+	"github.com/lucas-gaitzsch/pdf-turtle/services"
 
 	"github.com/gofiber/fiber/v3"
 
@@ -107,8 +108,8 @@ func createBundle(bundlesFromForm []*multipart.FileHeader) (*bundles.Bundle, err
 // @Param        id  path  string  true  "ID of the bundle"
 // @Success      200  "PDF File"
 // @Router       /api/pdf/from/html-bundle/{name} [post]
-func RenderBundleByNameHandler(c *fiber.Ctx) error {
-	ctx := c.UserContext()
+func RenderBundleByNameHandler(c fiber.Ctx) error {
+	ctx := c.Context()
 
 	bundleProvider, ok := ctx.Value(config.ContextKeyBundleProviderService).(services.BundleProviderService)
 	if !ok {

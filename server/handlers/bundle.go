@@ -8,7 +8,7 @@ import (
 	"net/textproto"
 	"net/url"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/lucas-gaitzsch/pdf-turtle/config"
 	"github.com/lucas-gaitzsch/pdf-turtle/services"
 	"github.com/lucas-gaitzsch/pdf-turtle/services/bundles"
@@ -28,8 +28,8 @@ var bundleProviderNotFound = errors.New("bundle provider service not found in co
 // @Param        rename  	     formData  boolean  false  "If true, the bundle will be renamed"
 // @Success      201             "Created"
 // @Router       /api/html-bundle [post]
-func SaveHtmlBundleHandler(c *fiber.Ctx) error {
-	ctx := c.UserContext()
+func SaveHtmlBundleHandler(c fiber.Ctx) error {
+	ctx := c.Context()
 	bundleProvider, ok := ctx.Value(config.ContextKeyBundleProviderService).(services.BundleProviderService)
 	if !ok {
 		return bundleProviderNotFound
@@ -83,8 +83,8 @@ func SaveHtmlBundleHandler(c *fiber.Ctx) error {
 // @Param        id  path  string  true  "ID of the bundle"
 // @Success      200  "OK"
 // @Router       /api/html-bundle/{name} [get]
-func GetHtmlBundleHandler(c *fiber.Ctx) error {
-	ctx := c.UserContext()
+func GetHtmlBundleHandler(c fiber.Ctx) error {
+	ctx := c.Context()
 	bundleProvider, ok := ctx.Value(config.ContextKeyBundleProviderService).(services.BundleProviderService)
 	if !ok {
 		return bundleProviderNotFound
@@ -136,8 +136,8 @@ func GetHtmlBundleHandler(c *fiber.Ctx) error {
 // @Produce      application/json
 // @Success      200  "OK"
 // @Router       /api/html-bundle [get]
-func ListHtmlBundlesInfoHandler(c *fiber.Ctx) error {
-	ctx := c.UserContext()
+func ListHtmlBundlesInfoHandler(c fiber.Ctx) error {
+	ctx := c.Context()
 	bundleProvider, ok := ctx.Value(config.ContextKeyBundleProviderService).(services.BundleProviderService)
 	if !ok {
 		return bundleProviderNotFound

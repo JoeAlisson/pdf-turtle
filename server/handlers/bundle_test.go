@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/gofiber/fiber/v3"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 
@@ -84,7 +85,7 @@ func TestSaveHtmlBundleHandler(t *testing.T) {
 		req := httptest.NewRequest("POST", "/api/html-bundle", buf)
 		req.Header.Set("Content-Type", contentType)
 
-		resp, err := s.Instance.Test(req, -1)
+		resp, err := s.Instance.Test(req)
 		if err != nil {
 			t.Fatalf("error sending request: %v", err)
 		}
@@ -145,7 +146,9 @@ func TestSaveHtmlBundleHandler(t *testing.T) {
 		req := httptest.NewRequest("POST", "/api/html-bundle", buf)
 		req.Header.Set("Content-Type", contentType)
 
-		resp, err := s.Instance.Test(req, -1)
+		resp, err := s.Instance.Test(req, fiber.TestConfig{
+			Timeout: -1,
+		})
 		if err != nil {
 			t.Fatalf("error sending request: %v", err)
 		}
@@ -177,7 +180,9 @@ func TestSaveHtmlBundleHandler(t *testing.T) {
 		req = httptest.NewRequest("POST", "/api/html-bundle", buf)
 		req.Header.Set("Content-Type", contentType)
 
-		resp, err = s.Instance.Test(req, -1)
+		resp, err = s.Instance.Test(req, fiber.TestConfig{
+			Timeout: -1,
+		})
 		if err != nil {
 			t.Fatalf("error sending request: %v", err)
 		}
@@ -290,7 +295,9 @@ func TestGetHtmlBundleHandler(t *testing.T) {
 	t.Run("Should get a html bundle", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/html-bundle/"+url.PathEscape(info.Name), nil)
 
-		resp, err := s.Instance.Test(req, -1)
+		resp, err := s.Instance.Test(req, fiber.TestConfig{
+			Timeout: -1,
+		})
 		if err != nil {
 			t.Fatalf("error sending request: %v", err)
 		}
@@ -440,7 +447,9 @@ func TestListHtmlBundleHandler(t *testing.T) {
 	t.Run("Should list html bundles info", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/html-bundle", nil)
 
-		resp, err := s.Instance.Test(req, -1)
+		resp, err := s.Instance.Test(req, fiber.TestConfig{
+			Timeout: -1,
+		})
 		if err != nil {
 			t.Fatalf("error sending request: %v", err)
 		}
