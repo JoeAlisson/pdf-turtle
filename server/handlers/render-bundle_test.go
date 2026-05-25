@@ -38,6 +38,10 @@ func TestRenderBundleByNameHandler(t *testing.T) {
 		Secure: false,
 	})
 
+	if err != nil {
+		t.Fatalf("error creating minio client: %v", err)
+	}
+
 	exists, err := mc.BucketExists(ctx, bucketName)
 	if err != nil {
 		t.Fatalf("error checking bucket: %v", err)
