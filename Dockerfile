@@ -17,7 +17,7 @@ COPY main.go .
 RUN go build -o pdf-turtle
 
 
-FROM node:22-alpine AS build-playground
+FROM node:24-alpine AS build-playground
 WORKDIR /app
 COPY .playground/package*.json ./
 RUN npm ci --ignore-scripts
@@ -26,7 +26,7 @@ COPY .playground/ ./
 RUN npm run build
 
 
-FROM chromedp/headless-shell:149.0.7795.2 AS runtime
+FROM chromedp/headless-shell:151.0.7922.109 AS runtime
 WORKDIR /app
 
 RUN apt update && \
