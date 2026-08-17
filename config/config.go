@@ -12,6 +12,7 @@ type Config struct {
 	LogLevelDebug          bool `arg:"--logDebug,env:LOG_LEVEL_DEBUG" default:"false" help:"Debug log level active"`
 	LogJsonOutput          bool `arg:"--logJsonOutput,env:LOG_JSON_OUTPUT" default:"false" help:"Json log output"`
 	RenderTimeoutInSeconds int  `arg:"--renderTimeout,env:RENDER_TIMEOUT" default:"30" help:"Render timeout in seconds"`
+	RenderCache            bool `arg:"--renderCache,env:RENDER_CACHE" default:"true" help:"Render cache active"`
 	WorkerInstances        int  `arg:"--workerInstances,env:WORKER_INSTANCES" default:"30"`
 
 	Port                         int    `arg:"env" default:"8000" help:"Server port"`
@@ -38,15 +39,12 @@ func ContextWithConfig(parentCtx context.Context, config Config) context.Context
 }
 
 func Get(ctx context.Context) Config {
-	c, hasConfig := ctx.Value(ContextKeyConfig).(Config)
-
-	if hasConfig {
+	if c, hasConfig := ctx.Value(ContextKeyConfig).(Config); hasConfig {
 		return c
-	} else {
-		log.Warn().Msg("no config was set -> fallback to default")
-
-		c := &Config{}
-		utils.ReflectDefaultValues(c)
-		return *c
 	}
+	log.Warn().Msg("no config was set -> fallback to default")
+
+	c := &Config{}
+	utils.ReflectDefaultValues(c)
+	return *c
 }

@@ -143,9 +143,8 @@ func (rbs *RendererBackgroundService) RenderAndReceive(job models.Job) (io.Reade
 	case pdfBytes := <-job.CallbackChan:
 		if pdfBytes != nil {
 			return pdfBytes, nil
-		} else {
-			return nil, errors.New("pdf callback empty")
 		}
+		return nil, errors.New("pdf callback empty")
 	case <-time.After(rbs.renderTimeout + 5*time.Second):
 		return nil, errors.New("pdf callback timeout")
 	}

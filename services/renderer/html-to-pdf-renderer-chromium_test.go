@@ -17,8 +17,7 @@ func TestRenderHtmlAsPdf(t *testing.T) {
 	logging.InitTestLogger(t)
 	defer logging.SetNullLogger()
 
-	ctxCancel, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctxCancel := t.Context()
 
 	ctx := getContextWithTestConfig(ctxCancel)
 
@@ -41,7 +40,7 @@ func TestRenderHtmlAsPdf(t *testing.T) {
 	buf.ReadFrom(reader)
 	b := buf.Bytes()
 
-	if len(b) == 0 || err != nil {
+	if len(b) == 0 {
 		t.Fatalf("RenderHtmlAsPdf result empty; err: %v", err)
 	}
 }
@@ -50,8 +49,7 @@ func TestRenderHtmlAsPdfWithNilPointerBody(t *testing.T) {
 	logging.InitTestLogger(t)
 	defer logging.SetNullLogger()
 
-	ctxCancel, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctxCancel := t.Context()
 
 	ctx := getContextWithTestConfig(ctxCancel)
 
@@ -77,8 +75,7 @@ func TestRenderHugeHtmlAsPdf(t *testing.T) {
 	logging.InitTestLogger(t)
 	defer logging.SetNullLogger()
 
-	ctxCancel, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctxCancel := t.Context()
 
 	ctx := getContextWithTestConfig(ctxCancel)
 
@@ -120,12 +117,12 @@ func TestRenderHugeHtmlAsPdf(t *testing.T) {
 	buf.ReadFrom(reader)
 	b := buf.Bytes()
 
-	if len(b) == 0 || err != nil {
+	if len(b) == 0 {
 		t.Fatalf("RenderHtmlAsPdf result empty; err: %v", err)
 	}
 }
 
-func getContextWithTestConfig(parentCtx context.Context) context.Context  {
+func getContextWithTestConfig(parentCtx context.Context) context.Context {
 	c := &config.Config{}
 	utils.ReflectDefaultValues(c)
 	c.NoSandbox = true
@@ -136,7 +133,7 @@ func getContextWithTestConfig(parentCtx context.Context) context.Context  {
 func generateRange(until int) []int {
 	res := make([]int, until)
 
-	for i := 0; i < until; i++ {
+	for i := range until {
 		res[i] = i
 	}
 

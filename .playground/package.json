@@ -25,7 +25,7 @@
     "file-saver": "^2.0.5",
     "jszip": "^3.10.1",
     "monaco-editor": "^0.56.0",
-    "quasar": "^2.24.0",
+    "quasar": "^2.25.0",
     "uuid": "^14.0.1",
     "vue": "^3.5.41",
     "vue-router": "^5.2.0"
@@ -45,7 +45,7 @@
     "swagger-axios-codegen": "^0.18.1",
     "typescript": "^7.0.2",
     "vite": "^8.2.1",
-    "vue-tsc": "^3.3.9"
+    "vue-tsc": "^3.3.10"
   },
   "overrides": {
     "monaco-editor": {

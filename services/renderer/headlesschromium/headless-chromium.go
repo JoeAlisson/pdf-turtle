@@ -7,6 +7,7 @@ import (
 	"io"
 	"time"
 
+	"github.com/chromedp/cdproto/network"
 	"github.com/lucas-gaitzsch/pdf-turtle/config"
 
 	"github.com/rs/zerolog/log"
@@ -129,7 +130,14 @@ func RenderHtmlAsPdf(chromiumAllocCtx context.Context, outerCtx context.Context,
 		}),
 	}
 
-	if err := chromedp.Run(cctx, runWithTimeOut(outerCtx, tasks)); err != nil {
+	c := config.Get(outerCtx)
+	actions := make([]chromedp.Action, 0, 3)
+	if c.RenderCache {
+		actions = append(actions, network.Enable(), network.SetCacheDisabled(true))
+	}
+	actions = append(actions, runWithTimeOut(outerCtx, tasks))
+
+	if err := chromedp.Run(cctx, actions...); err != nil {
 		return nil, err
 	}
 

@@ -45,7 +45,6 @@ func parseJsonFieldFromDoubleEncodedString(model any) any {
 		var parsed any
 		json.Unmarshal([]byte(str), &parsed)
 		return parsed
-	} else {
-		return model
 	}
+	return model
 }
