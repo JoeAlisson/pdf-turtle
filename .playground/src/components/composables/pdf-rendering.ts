@@ -1,25 +1,25 @@
-import { getBaseRenderData, RenderTemplateDataViewModel } from "@/models/render-data-base"
-import { RequestError } from "@/models/request-error"
-import { RenderHtmlBundleService } from "@/swagger-client"
-import { createDebounce } from "@/utils/debounce"
-import { AxiosError, CanceledError } from "axios"
-import { reactive, ref, watch, computed } from "vue"
-import { packBundle } from "./bundle-handling"
+import { AxiosError, CanceledError } from 'axios'
+import { computed, reactive, ref, watch } from 'vue'
+import { getBaseRenderData, type RenderTemplateDataViewModel } from '@/models/render-data-base'
+import type { RequestError } from '@/models/request-error'
+import { RenderHtmlBundleService } from '@/swagger-client'
+import { createDebounce } from '@/utils/debounce'
+import { packBundle } from './bundle-handling'
 
 export function usePdfRendering() {
   const renderTemplateData = reactive<RenderTemplateDataViewModel>(getBaseRenderData())
 
   const settings = reactive({
     autoRenderDelay: 2000,
-    serverUrl: "",
-    secret: "",
+    serverUrl: '',
+    secret: ''
   })
 
-  const settingsLocalStorageKey = "settings"
+  const settingsLocalStorageKey = 'settings'
 
   // save and load settings from local storage
   watch(settings, () => localStorage.setItem(settingsLocalStorageKey, JSON.stringify(settings)))
-  Object.assign(settings, JSON.parse(localStorage.getItem(settingsLocalStorageKey) ?? "{}"))
+  Object.assign(settings, JSON.parse(localStorage.getItem(settingsLocalStorageKey) ?? '{}'))
 
   const loadingCounter = ref(0)
   const isLoading = computed(() => loadingCounter.value > 0)
@@ -27,7 +27,7 @@ export function usePdfRendering() {
   const hasError = computed(() => errMsg.value !== null)
   const errMsg = ref<RequestError | null>(null)
 
-  const pdfResponseDataUrl = ref("")
+  const pdfResponseDataUrl = ref('')
 
   const requestTimeInMs = ref(0)
 
@@ -49,14 +49,14 @@ export function usePdfRendering() {
         {
           bundle: zipBlob,
           model: renderTemplateData.modelStr,
-          templateEngine: renderTemplateData.templateEngine,
+          templateEngine: renderTemplateData.templateEngine
         },
         {
           loading: false,
-          responseType: "blob",
+          responseType: 'blob',
           signal: abortController.signal,
           baseURL: settings.serverUrl || undefined,
-          headers: !settings.secret ? undefined : { Authorization: `Bearer ${settings.secret}` },
+          headers: !settings.secret ? undefined : { Authorization: `Bearer ${settings.secret}` }
         }
       )
 
@@ -65,19 +65,19 @@ export function usePdfRendering() {
       pdfResponseDataUrl.value = URL.createObjectURL(res)
     } catch (e) {
       if (e instanceof CanceledError) {
-        console.log("request was canceled")
+        console.log('request was canceled')
       } else {
         if (e instanceof AxiosError) {
           try {
             const responseText: string = await e.response?.data.text()
             errMsg.value = JSON.parse(responseText) as RequestError
           } catch {
-            errMsg.value = { msg: e.message, err: " - ", requestId: " - " }
+            errMsg.value = { msg: e.message, err: ' - ', requestId: ' - ' }
           }
         } else {
-          errMsg.value = { msg: e as string, err: " - ", requestId: " - " }
+          errMsg.value = { msg: e as string, err: ' - ', requestId: ' - ' }
         }
-        console.warn("request err", e)
+        console.warn('request err', e)
       }
     } finally {
       loadingCounter.value--
@@ -101,6 +101,6 @@ export function usePdfRendering() {
     errMsg,
     requestTimeInMs,
     pdfResponseDataUrl,
-    requestPdf,
+    requestPdf
   }
 }

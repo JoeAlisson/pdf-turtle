@@ -1,16 +1,16 @@
-import * as monaco from "monaco-editor"
-import { inject, onMounted, Ref, ref, watch } from "vue"
+import * as monaco from 'monaco-editor'
+import { inject, onMounted, type Ref, ref, watch } from 'vue'
 
 export const EditorBaseProps = {
   modelValue: {
     type: String,
-    default: "",
-  },
+    default: ''
+  }
 }
 
-const getTheme = (isDark: boolean) => (isDark ? "vs-dark" : "vs")
+const getTheme = (isDark: boolean) => (isDark ? 'vs-dark' : 'vs')
 
-export type EditorBaseEmits = { (event: "update:modelValue", value: string): void }
+export type EditorBaseEmits = (event: 'update:modelValue', value: string) => void
 
 export function useEditorBase(
   props: { modelValue: string },
@@ -21,11 +21,11 @@ export function useEditorBase(
 
   const createModelIntern = () => {
     const m = createModel(props.modelValue)
-    m.onDidChangeContent(() => emit("update:modelValue", m.getValue()))
+    m.onDidChangeContent(() => emit('update:modelValue', m.getValue()))
     m.updateOptions({
       tabSize: 2,
       insertSpaces: false,
-      indentSize: 2,
+      indentSize: 2
     })
     return m
   }
@@ -34,16 +34,16 @@ export function useEditorBase(
 
   watch(
     () => props.modelValue,
-    (val) => {
+    val => {
       if (model.getValue().length !== val.length) {
         model.setValue(val)
       }
     }
   )
 
-  const themeIsDark = inject<Ref<boolean>>("themeIsDark", ref(false))
+  const themeIsDark = inject<Ref<boolean>>('themeIsDark', ref(false))
 
-  watch(themeIsDark, (isDark) => {
+  watch(themeIsDark, isDark => {
     if (editor.value) {
       monaco.editor.setTheme(getTheme(isDark))
     }
@@ -56,13 +56,13 @@ export function useEditorBase(
       editor.value = monaco.editor.create(editorDomRef.value, {
         model,
         automaticLayout: true,
-        autoIndent: "full",
+        autoIndent: 'full',
         useTabStops: true,
         tabSize: 2,
-        theme: getTheme(themeIsDark.value),
+        theme: getTheme(themeIsDark.value)
       })
     } else {
-      console.error("cant bind editor")
+      console.error('cant bind editor')
     }
   })
 
@@ -75,6 +75,6 @@ export function useEditorBase(
     editorDomRef,
     editor,
     model,
-    recreateModel,
+    recreateModel
   }
 }

@@ -1,7 +1,9 @@
 import { defineConfig } from "vite"
 import vue from "@vitejs/plugin-vue"
-import path from "path"
+import path from "node:path"
 import { quasar, transformAssetUrls } from "@quasar/vite-plugin"
+
+const dirName = import.meta.dirname
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -16,7 +18,7 @@ export default defineConfig({
   define: { "process.env": {} },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(dirName, "./src"),
     },
   },
   server: {

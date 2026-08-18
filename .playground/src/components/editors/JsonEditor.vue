@@ -3,7 +3,8 @@
 </template>
 
 <script setup lang="ts">
-import { editor, Uri, languages } from "monaco-editor"
+import { editor, Uri } from "monaco-editor"
+import * as json from "monaco-editor/languages/features/json/register"
 import { EditorBaseProps, useEditorBase } from "../composables/editor-base"
 import { v4 as uuid } from "uuid"
 
@@ -21,7 +22,7 @@ const createModel = (value: string) => {
   const model = editor.createModel(value, "json", modelUri)
 
   // configure the JSON language support with schemas and schema associations
-  languages.json.jsonDefaults.setDiagnosticsOptions({
+  json.jsonDefaults.setDiagnosticsOptions({
     validate: true,
     schemas: props.schemas.map((schema) => ({
       uri: "scheme:json/" + schemaId,

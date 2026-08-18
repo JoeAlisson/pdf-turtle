@@ -1,15 +1,15 @@
-import { ref, UnwrapNestedRefs, watch } from "vue"
+import FileSaver from 'file-saver'
 
-import JsZip from "jszip"
-import FileSaver from "file-saver"
-import { getBaseOptions, getBaseRenderData, RenderTemplateDataViewModel } from "@/models/render-data-base"
-import { Asset, BundleAssetsFolder } from "@/models/asset"
+import JsZip from 'jszip'
+import { ref, type UnwrapNestedRefs, watch } from 'vue'
+import { serverBaseUrl } from '@/config/server'
+import { type Asset, BundleAssetsFolder } from '@/models/asset'
+import { getBaseOptions, getBaseRenderData, type RenderTemplateDataViewModel } from '@/models/render-data-base'
 import {
   EnumRenderTemplateDataTemplateEngine,
   ListHtmlBundlesInfoService,
-  SaveHtmlBundleService,
-} from "@/swagger-client"
-import { serverBaseUrl } from "@/config/server"
+  SaveHtmlBundleService
+} from '@/swagger-client'
 
 type IncludedFiles = {
   index?: boolean
@@ -31,26 +31,26 @@ const includedFilesAll: IncludedFiles = {
   footer: true,
   options: true,
   assets: true,
-  exampleModel: true,
+  exampleModel: true
 }
 
 export function packBundle(data: RenderTemplateDataViewModel, includedFiles = includedFilesAll): Promise<Blob> {
   const zip = new JsZip()
 
   if (includedFiles.index) {
-    zip.file("index.html", data.htmlTemplate ?? "")
+    zip.file('index.html', data.htmlTemplate ?? '')
   }
   if (includedFiles.header && data.headerHtmlTemplate) {
-    zip.file("header.html", data.headerHtmlTemplate)
+    zip.file('header.html', data.headerHtmlTemplate)
   }
   if (includedFiles.footer && data.footerHtmlTemplate) {
-    zip.file("footer.html", data.footerHtmlTemplate)
+    zip.file('footer.html', data.footerHtmlTemplate)
   }
   if (includedFiles.options) {
-    zip.file("options.json", JSON.stringify(data.options))
+    zip.file('options.json', JSON.stringify(data.options))
   }
   if (includedFiles.exampleModel) {
-    zip.file("example-model.json", JSON.stringify(JSON.parse(data.modelStr)))
+    zip.file('example-model.json', JSON.stringify(JSON.parse(data.modelStr)))
   }
 
   if (includedFiles.assets) {
@@ -59,33 +59,36 @@ export function packBundle(data: RenderTemplateDataViewModel, includedFiles = in
     }
   }
 
-  return zip.generateAsync({ type: "blob" })
+  return zip.generateAsync({ type: 'blob' })
 }
 
-export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTemplateDataViewModel, settings: UnwrapNestedRefs<{
-  autoRenderDelay: number;
-  serverUrl: string;
-  secret: string
-}>) {
+export function useBundleHandling(
+  reactiveRenderTemplateDataViewModel: RenderTemplateDataViewModel,
+  settings: UnwrapNestedRefs<{
+    autoRenderDelay: number
+    serverUrl: string
+    secret: string
+  }>
+) {
   const loadBundle = async (
     bundleBufferSrc: ArrayBuffer,
-    target: RenderTemplateDataViewModel = getBaseRenderData(),
+    target: RenderTemplateDataViewModel = getBaseRenderData()
   ): Promise<RenderTemplateDataViewModel> => {
     const zip = await JsZip.loadAsync(bundleBufferSrc)
 
-    const indexStr = await zip.files["index.html"]?.async("string")
-    const headerStr = await zip.files["header.html"]?.async("string")
-    const footerStr = await zip.files["footer.html"]?.async("string")
-    const optionsStr = await zip.files["options.json"]?.async("string")
-    const exampleModelStr = (await zip.files["example-model.json"]?.async("string")) ?? "{}"
+    const indexStr = await zip.files['index.html']?.async('string')
+    const headerStr = await zip.files['header.html']?.async('string')
+    const footerStr = await zip.files['footer.html']?.async('string')
+    const optionsStr = await zip.files['options.json']?.async('string')
+    const exampleModelStr = (await zip.files['example-model.json']?.async('string')) ?? '{}'
 
-    const assetFolderPath = BundleAssetsFolder + "/"
+    const assetFolderPath = BundleAssetsFolder + '/'
     const assets: Asset[] = []
     for (const fKey in zip.files) {
       if (fKey.startsWith(assetFolderPath) && fKey !== assetFolderPath) {
         assets.push({
           name: fKey.substring(assetFolderPath.length),
-          blob: await zip.files[fKey].async("blob"),
+          blob: await zip.files[fKey].async('blob')
         })
       }
     }
@@ -116,21 +119,21 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
   }
 
   const downloadBundle = async (
-    only?: "documentWithoutHeaderAndFooter" | "onlyBody" | "onlyHeader" | "onlyFooter" | "onlyOptions" | "onlyAssets",
+    only?: 'documentWithoutHeaderAndFooter' | 'onlyBody' | 'onlyHeader' | 'onlyFooter' | 'onlyOptions' | 'onlyAssets'
   ) => {
     const includedFiles = ((): IncludedFiles | undefined => {
       switch (only) {
-        case "documentWithoutHeaderAndFooter":
+        case 'documentWithoutHeaderAndFooter':
           return { index: true, options: true, assets: true }
-        case "onlyBody":
+        case 'onlyBody':
           return { index: true }
-        case "onlyHeader":
+        case 'onlyHeader':
           return { header: true }
-        case "onlyFooter":
+        case 'onlyFooter':
           return { footer: true }
-        case "onlyOptions":
+        case 'onlyOptions':
           return { options: true }
-        case "onlyAssets":
+        case 'onlyAssets':
           return { assets: true }
         case undefined:
           return undefined
@@ -139,16 +142,16 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
 
     const zip = await packBundle(reactiveRenderTemplateDataViewModel, includedFiles)
 
-    FileSaver.saveAs(zip, "pdf-turtle-bundle.zip")
+    FileSaver.saveAs(zip, 'pdf-turtle-bundle.zip')
   }
 
   const loadBundlesInfo = async (): Promise<BundleInfo[]> => {
     try {
       const res = await ListHtmlBundlesInfoService.htmlBundle({
         loading: false,
-        responseType: "json",
+        responseType: 'json',
         baseURL: settings.serverUrl || undefined,
-        headers: !settings.secret ? undefined : { Authorization: `Bearer ${settings.secret}` },
+        headers: !settings.secret ? undefined : { Authorization: `Bearer ${settings.secret}` }
       })
       return res.Items
     } catch (e) {
@@ -161,23 +164,23 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
     try {
       const baseUrl = settings.serverUrl || serverBaseUrl
       const res = await fetch(`${baseUrl}/api/html-bundle/${encodeURIComponent(name)}`, {
-        headers: !settings.secret ? undefined : { Authorization: `Bearer ${settings.secret}` },
+        headers: !settings.secret ? undefined : { Authorization: `Bearer ${settings.secret}` }
       })
       if (!res.ok) {
         bundleError.value = `Error loading bundle: ${res.statusText}`
         return
       }
       const data = await res.formData()
-      const bundle = data.get("bundle") as File
+      const bundle = data.get('bundle') as File
 
       await loadBundle(await bundle.arrayBuffer(), reactiveRenderTemplateDataViewModel)
-      const engine = data.get("templateEngine") as keyof typeof EnumRenderTemplateDataTemplateEngine
+      const engine = data.get('templateEngine') as keyof typeof EnumRenderTemplateDataTemplateEngine
       reactiveRenderTemplateDataViewModel.templateEngine = EnumRenderTemplateDataTemplateEngine[engine]
 
-      currentBundle.value = { name: data.get("name") as string }
+      currentBundle.value = { name: data.get('name') as string }
       dirty.value = false
     } catch (e) {
-      bundleError.value = `Error loading bundle: ${e}`
+      bundleError.value = `Error loading bundle ${name}: ${e}`
     }
   }
 
@@ -189,14 +192,14 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
           bundle,
           name,
           templateEngine: reactiveRenderTemplateDataViewModel.templateEngine ?? 'golang',
-          renameFrom,
+          renameFrom
         },
         {
           loading: true,
-          responseType: "json",
+          responseType: 'json',
           baseURL: settings.serverUrl || undefined,
-          headers: !settings.secret ? undefined : { Authorization: `Bearer ${settings.secret}` },
-        },
+          headers: !settings.secret ? undefined : { Authorization: `Bearer ${settings.secret}` }
+        }
       )
       currentBundle.value = { name }
       dirty.value = false
@@ -204,18 +207,18 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
     } catch (e) {
       bundleError.value = `Error saving bundle: ${e}`
     }
-    return ""
+    return ''
   }
 
   const cleanLocalStorageBundle = () => {
-    localStorage.removeItem("currentBundle")
+    localStorage.removeItem('currentBundle')
   }
 
   const currentBundle = ref<BundleInfo | null>(null)
   const dirty = ref(false)
   const bundleError = ref<string | null>(null)
   const bundleFileInputModel = ref<File | null>(null)
-  watch(bundleFileInputModel, async (b) => {
+  watch(bundleFileInputModel, async b => {
     if (b) {
       await loadBundle(await b.arrayBuffer(), reactiveRenderTemplateDataViewModel)
       currentBundle.value = null
@@ -229,17 +232,17 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
     dirty.value = true
   })
 
-  window.onbeforeunload = (e) => {
+  window.onbeforeunload = e => {
     if (currentBundle.value?.name) {
-      localStorage.setItem("currentBundle", currentBundle.value.name)
+      localStorage.setItem('currentBundle', currentBundle.value.name)
     }
     if (dirty.value) {
       e.preventDefault()
-      e.returnValue = "there are unsaved data, are you sure you want to leave?"
+      e.returnValue = 'there are unsaved data, are you sure you want to leave?'
     }
   }
 
-  const savedBundleId = localStorage.getItem("currentBundle")
+  const savedBundleId = localStorage.getItem('currentBundle')
   if (savedBundleId) {
     getBundle(savedBundleId).catch(console.error)
   }
@@ -253,6 +256,6 @@ export function useBundleHandling(reactiveRenderTemplateDataViewModel: RenderTem
     cleanLocalStorageBundle,
     bundleError,
     currentBundle,
-    bundleFileInputModel,
+    bundleFileInputModel
   }
 }

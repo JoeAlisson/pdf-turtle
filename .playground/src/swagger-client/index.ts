@@ -2,8 +2,8 @@
 // @ts-nocheck
 /* eslint-disable */
 
-import { IRequestOptions, IRequestConfig, getConfigs, axios } from "./serviceOptions"
-export const basePath = ""
+import { axios, getConfigs, type IRequestConfig, type IRequestOptions } from './serviceOptions'
+export const basePath = ''
 
 export interface IList<T> extends Array<T> {}
 export interface List<T> extends Array<T> {}
@@ -39,9 +39,9 @@ export class ListHtmlBundlesInfoService {
    */
   static htmlBundle(options: IRequestOptions = {}): Promise<any> {
     return new Promise((resolve, reject) => {
-      let url = basePath + "/api/html-bundle"
+      const url = basePath + '/api/html-bundle'
 
-      const configs: IRequestConfig = getConfigs("get", "application/json", url, options)
+      const configs: IRequestConfig = getConfigs('get', 'application/json', url, options)
 
       axios(configs, resolve, reject)
     })
@@ -66,15 +66,15 @@ export class SaveHtmlBundleService {
     options: IRequestOptions = {}
   ): Promise<any> {
     return new Promise((resolve, reject) => {
-      let url = basePath + "/api/html-bundle"
+      const url = basePath + '/api/html-bundle'
 
-      const configs: IRequestConfig = getConfigs("post", "multipart/form-data", url, options)
+      const configs: IRequestConfig = getConfigs('post', 'multipart/form-data', url, options)
 
       const data = new FormData()
-      data.append("bundle", params.bundle)
-      data.append("name", params.name)
-      data.append("templateEngine", params.templateEngine)
-      if (params.renameFrom) data.append("renameFrom", params.renameFrom)
+      data.append('bundle', params.bundle)
+      data.append('name', params.name)
+      data.append('templateEngine', params.templateEngine)
+      if (params.renameFrom) data.append('renameFrom', params.renameFrom)
       configs.data = data
 
       axios(configs, resolve, reject)
@@ -94,10 +94,10 @@ export class GetHtmlBundleService {
     options: IRequestOptions = {}
   ): Promise<any> {
     return new Promise((resolve, reject) => {
-      let url = basePath + "/api/html-bundle/{id}"
-      url = url.replace("{id}", params["id"] + "")
+      let url = basePath + '/api/html-bundle/{id}'
+      url = url.replace('{id}', params['id'] + '')
 
-      const configs: IRequestConfig = getConfigs("get", "application/json", url, options)
+      const configs: IRequestConfig = getConfigs('get', 'application/json', url, options)
 
       axios(configs, resolve, reject)
     })
@@ -120,39 +120,39 @@ export class RenderHtmlBundleService {
     options: IRequestOptions = {}
   ): Promise<any> {
     return new Promise((resolve, reject) => {
-      let url = basePath + "/api/pdf/from/html-bundle/render"
+      const url = basePath + '/api/pdf/from/html-bundle/render'
 
-      const configs: IRequestConfig = getConfigs("post", "multipart/form-data", url, options)
+      const configs: IRequestConfig = getConfigs('post', 'multipart/form-data', url, options)
 
       let data = null
       data = new FormData()
-      if (params["bundle"]) {
-        if (Object.prototype.toString.call(params["bundle"]) === "[object Array]") {
-          for (const item of params["bundle"]) {
-            data.append("bundle", item as any)
+      if (params['bundle']) {
+        if (Object.prototype.toString.call(params['bundle']) === '[object Array]') {
+          for (const item of params['bundle']) {
+            data.append('bundle', item as any)
           }
         } else {
-          data.append("bundle", params["bundle"] as any)
+          data.append('bundle', params['bundle'] as any)
         }
       }
 
-      if (params["model"]) {
-        if (Object.prototype.toString.call(params["model"]) === "[object Array]") {
-          for (const item of params["model"]) {
-            data.append("model", item as any)
+      if (params['model']) {
+        if (Object.prototype.toString.call(params['model']) === '[object Array]') {
+          for (const item of params['model']) {
+            data.append('model', item as any)
           }
         } else {
-          data.append("model", params["model"] as any)
+          data.append('model', params['model'] as any)
         }
       }
 
-      if (params["templateEngine"]) {
-        if (Object.prototype.toString.call(params["templateEngine"]) === "[object Array]") {
-          for (const item of params["templateEngine"]) {
-            data.append("templateEngine", item as any)
+      if (params['templateEngine']) {
+        if (Object.prototype.toString.call(params['templateEngine']) === '[object Array]') {
+          for (const item of params['templateEngine']) {
+            data.append('templateEngine', item as any)
           }
         } else {
-          data.append("templateEngine", params["templateEngine"] as any)
+          data.append('templateEngine', params['templateEngine'] as any)
         }
       }
 
@@ -172,10 +172,10 @@ export class RenderHtmlBundleService {
     options: IRequestOptions = {}
   ): Promise<any> {
     return new Promise((resolve, reject) => {
-      let url = basePath + "/api/pdf/from/html-bundle/{id}"
-      url = url.replace("{id}", params["id"] + "")
+      let url = basePath + '/api/pdf/from/html-bundle/{id}'
+      url = url.replace('{id}', params['id'] + '')
 
-      const configs: IRequestConfig = getConfigs("post", "application/json", url, options)
+      const configs: IRequestConfig = getConfigs('post', 'application/json', url, options)
 
       axios(configs, resolve, reject)
     })
@@ -194,11 +194,11 @@ export class RenderHtmlTemplateService {
     options: IRequestOptions = {}
   ): Promise<any> {
     return new Promise((resolve, reject) => {
-      let url = basePath + "/api/pdf/from/html-template/render"
+      const url = basePath + '/api/pdf/from/html-template/render'
 
-      const configs: IRequestConfig = getConfigs("post", "application/json", url, options)
+      const configs: IRequestConfig = getConfigs('post', 'application/json', url, options)
 
-      let data = params["renderTemplateData"]
+      const data = params['renderTemplateData']
 
       configs.data = data
 
@@ -216,11 +216,11 @@ export class RenderHtmlTemplateService {
     options: IRequestOptions = {}
   ): Promise<TemplateTestResult> {
     return new Promise((resolve, reject) => {
-      let url = basePath + "/api/pdf/from/html-template/test"
+      const url = basePath + '/api/pdf/from/html-template/test'
 
-      const configs: IRequestConfig = getConfigs("post", "application/json", url, options)
+      const configs: IRequestConfig = getConfigs('post', 'application/json', url, options)
 
-      let data = params["renderTemplateData"]
+      const data = params['renderTemplateData']
 
       configs.data = data
 
@@ -241,11 +241,11 @@ export class RenderHtmlService {
     options: IRequestOptions = {}
   ): Promise<any> {
     return new Promise((resolve, reject) => {
-      let url = basePath + "/api/pdf/from/html/render"
+      const url = basePath + '/api/pdf/from/html/render'
 
-      const configs: IRequestConfig = getConfigs("post", "application/json", url, options)
+      const configs: IRequestConfig = getConfigs('post', 'application/json', url, options)
 
-      let data = params["renderData"]
+      const data = params['renderData']
 
       configs.data = data
 
@@ -260,9 +260,9 @@ export class InternalsService {
    */
   static health(options: IRequestOptions = {}): Promise<any> {
     return new Promise((resolve, reject) => {
-      let url = basePath + "/health"
+      const url = basePath + '/health'
 
-      const configs: IRequestConfig = getConfigs("get", "multipart/form-data", url, options)
+      const configs: IRequestConfig = getConfigs('get', 'multipart/form-data', url, options)
 
       axios(configs, resolve, reject)
     })
@@ -356,18 +356,18 @@ export interface TemplateTestResult {
   isValid?: boolean
 }
 export enum EnumRenderOptionsPageFormat {
-  "A0" = "A0",
-  "A1" = "A1",
-  "A2" = "A2",
-  "A3" = "A3",
-  "A4" = "A4",
-  "A5" = "A5",
-  "A6" = "A6",
-  "Letter" = "Letter",
-  "Legal" = "Legal",
+  A0 = 'A0',
+  A1 = 'A1',
+  A2 = 'A2',
+  A3 = 'A3',
+  A4 = 'A4',
+  A5 = 'A5',
+  A6 = 'A6',
+  Letter = 'Letter',
+  Legal = 'Legal'
 }
 export enum EnumRenderTemplateDataTemplateEngine {
-  "golang" = "golang",
-  "handlebars" = "handlebars",
-  "django" = "django",
+  golang = 'golang',
+  handlebars = 'handlebars',
+  django = 'django'
 }

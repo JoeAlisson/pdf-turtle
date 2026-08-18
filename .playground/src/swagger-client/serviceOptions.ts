@@ -1,7 +1,7 @@
 /** Generate by swagger-axios-codegen */
 /* eslint-disable */
 // @ts-nocheck
-import axiosStatic, { type AxiosInstance, type AxiosRequestConfig } from "axios"
+import axiosStatic, { type AxiosInstance, type AxiosRequestConfig } from 'axios'
 
 export interface IRequestOptions extends AxiosRequestConfig {
   /**
@@ -15,7 +15,7 @@ export interface IRequestOptions extends AxiosRequestConfig {
   /**
    * data security, extended fields are encrypted using the specified algorithm
    */
-  security?: Record<string, "md5" | "sha1" | "aes" | "des">
+  security?: Record<string, 'md5' | 'sha1' | 'aes' | 'des'>
   /**
    * indicates whether Authorization credentials are required for the request
    * @default true
@@ -47,14 +47,14 @@ export function axios(configs: IRequestConfig, resolve: (p: any) => void, reject
   if (serviceOptions.axios) {
     return serviceOptions.axios
       .request(configs)
-      .then((res) => {
+      .then(res => {
         resolve(res.data)
       })
-      .catch((err) => {
+      .catch(err => {
         reject(err)
       })
   } else {
-    throw new Error("please inject yourself instance like axios  ")
+    throw new Error('please inject yourself instance like axios  ')
   }
 }
 
@@ -64,11 +64,11 @@ export function getConfigs(method: string, contentType: string, url: string, opt
     showError: serviceOptions.showError,
     ...options,
     method,
-    url,
+    url
   }
   configs.headers = {
     ...options.headers,
-    "Content-Type": contentType,
+    'Content-Type': contentType
   }
   return configs
 }

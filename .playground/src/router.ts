@@ -1,29 +1,28 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router"
-
-import Playground from "@/components/Playground.vue"
-import About from "@/components/About.vue"
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import About from '@/components/About.vue'
+import Playground from '@/components/Playground.vue'
 
 const routeNames = {
-  Playground: "playground",
-  About: "about",
+  Playground: 'playground',
+  About: 'about'
 }
 
 const routeDefinitions: RouteRecordRaw[] = [
   {
-    path: "/",
+    path: '/',
     component: Playground,
-    name: routeNames.Playground,
+    name: routeNames.Playground
   },
   {
-    path: "/about",
+    path: '/about',
     component: About,
-    name: routeNames.About,
-  },
+    name: routeNames.About
+  }
 ]
 
 const router = createRouter({
   history: createWebHistory(),
-  routes: routeDefinitions,
+  routes: routeDefinitions
 })
 
-export { router, routeDefinitions, routeNames }
+export { routeDefinitions, routeNames, router }
