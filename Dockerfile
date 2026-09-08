@@ -26,7 +26,7 @@ COPY .playground/ ./
 RUN npm run build
 
 
-FROM chromedp/headless-shell:151.0.7922.109 AS runtime
+FROM chromedp/headless-shell:152.0.7939.3 AS runtime
 WORKDIR /app
 
 RUN apt update && \
