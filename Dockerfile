@@ -1,4 +1,4 @@
-FROM golang:1.26-alpine AS build-service
+FROM golang:1.27-alpine AS build-service
 WORKDIR /build
 
 COPY go.mod go.sum ./
@@ -17,7 +17,7 @@ COPY main.go .
 RUN go build -o pdf-turtle
 
 
-FROM node:24-alpine AS build-playground
+FROM node:26-alpine AS build-playground
 WORKDIR /app
 COPY .playground/package*.json ./
 RUN npm ci --ignore-scripts
