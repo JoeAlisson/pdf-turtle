@@ -2,7 +2,7 @@ package pdf
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"io"
 
@@ -98,7 +98,7 @@ func (ps *PdfService) PdfFromBundle(bundle *bundles.Bundle, jsonModel string, te
 			RenderOptions:      opt,
 		}
 
-		json.Unmarshal([]byte(jsonModel), &templateData.Model)
+		_ = json.Unmarshal([]byte(jsonModel), &templateData.Model)
 
 		pdfData, errRender = ps.PdfFromHtmlTemplate(templateData)
 	} else {

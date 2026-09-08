@@ -1,7 +1,7 @@
 package templateengines
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"html/template"
 	"strings"
 
@@ -9,7 +9,7 @@ import (
 )
 
 var templateFunctions = template.FuncMap{
-	"marshal": func(v interface{}) template.JS {
+	"marshal": func(v any) template.JS {
 		a, _ := json.Marshal(v)
 		return template.JS(a)
 	},

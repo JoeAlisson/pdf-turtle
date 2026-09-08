@@ -48,8 +48,7 @@ func newTestRenderService(ctx context.Context, workerInstances int) (*RendererBa
 func TestWorkerUpAndDown(t *testing.T) {
 	logging.InitTestLogger(t)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	service, rendererMock := newTestRenderService(ctx, 10)
 	defer service.Close()
@@ -85,8 +84,7 @@ func TestWorkerBeyondTheLimit(t *testing.T) {
 	const jobCount = 50
 	const workerInstances = 40
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	service, rendererMock := newTestRenderService(ctx, workerInstances)
 	defer service.Close()
@@ -94,15 +92,15 @@ func TestWorkerBeyondTheLimit(t *testing.T) {
 	gotReturn := make(chan bool)
 
 	// queue jobs
-	for i := 0; i < jobCount; i++ {
+	for range jobCount {
 		go func() {
-			service.RenderAndReceive(*models.NewJob(context.Background(), &models.RenderData{}))
+			_, _ = service.RenderAndReceive(*models.NewJob(context.Background(), &models.RenderData{}))
 			gotReturn <- true
 		}()
 	}
 
 	// check worker limit
-	for i := 0; i < workerInstances; i++ {
+	for range workerInstances {
 		<-rendererMock.HitRenderChan
 	}
 
@@ -110,13 +108,13 @@ func TestWorkerBeyondTheLimit(t *testing.T) {
 		t.Fatalf("worker slots should have len of %d while request (curr: %d)", workerInstances, currLen)
 	}
 
-	for i := 0; i < workerInstances; i++ {
+	for range workerInstances {
 		rendererMock.ContinueChan <- true
 		<-gotReturn
 	}
 
 	// process remaining
-	for i := 0; i < jobCount-workerInstances; i++ {
+	for range jobCount - workerInstances {
 		<-rendererMock.HitRenderChan
 	}
 
@@ -126,7 +124,7 @@ func TestWorkerBeyondTheLimit(t *testing.T) {
 		t.Fatalf("worker slots should have len of %d while request (curr: %d)", jobCount-workerInstances, currLen)
 	}
 
-	for i := 0; i < jobCount-workerInstances; i++ {
+	for range jobCount - workerInstances {
 		rendererMock.ContinueChan <- true
 		<-gotReturn
 	}

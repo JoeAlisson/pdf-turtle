@@ -1,7 +1,7 @@
 package templateengines
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"reflect"
 	"testing"
 )
@@ -31,14 +31,14 @@ const jsonModel = `
 
 func getModel() any {
 	var model any
-	json.Unmarshal([]byte(jsonModel), &model)
+	_ = json.Unmarshal([]byte(jsonModel), &model)
 	return model
 }
 
 func TestGetTemplateEngineByKeyGo(t *testing.T) {
 	engine := getTemplateEngineByKey(t, GoTemplateEngineKey)
 
-	if reflect.TypeOf(engine).Elem().Name() != reflect.TypeOf(GoTemplateEngine{}).Name() {
+	if reflect.TypeOf(engine).Elem().Name() != reflect.TypeFor[GoTemplateEngine]().Name() {
 		fatalWrongTemplateEngine(t)
 	}
 }
@@ -46,7 +46,7 @@ func TestGetTemplateEngineByKeyGo(t *testing.T) {
 func TestGetTemplateEngineByKeyHandlebars(t *testing.T) {
 	engine := getTemplateEngineByKey(t, HandlebarsTemplateEngineKey)
 
-	if reflect.TypeOf(engine).Elem().Name() != reflect.TypeOf(HandlebarsTemplateEngine{}).Name() {
+	if reflect.TypeOf(engine).Elem().Name() != reflect.TypeFor[HandlebarsTemplateEngine]().Name() {
 		fatalWrongTemplateEngine(t)
 	}
 }
@@ -54,7 +54,7 @@ func TestGetTemplateEngineByKeyHandlebars(t *testing.T) {
 func TestGetTemplateEngineByKeyDjango(t *testing.T) {
 	engine := getTemplateEngineByKey(t, DjangoTemplateEngineKey)
 
-	if reflect.TypeOf(engine).Elem().Name() != reflect.TypeOf(DjangoTemplateEngine{}).Name() {
+	if reflect.TypeOf(engine).Elem().Name() != reflect.TypeFor[DjangoTemplateEngine]().Name() {
 		fatalWrongTemplateEngine(t)
 	}
 }
@@ -66,7 +66,7 @@ func TestGetTemplateEngineByKeyEmpty(t *testing.T) {
 		t.Fatal("found templateengine by empty key")
 	}
 
-	if reflect.TypeOf(engine).Elem().Name() != reflect.TypeOf(GoTemplateEngine{}).Name() {
+	if reflect.TypeOf(engine).Elem().Name() != reflect.TypeFor[GoTemplateEngine]().Name() {
 		fatalWrongTemplateEngine(t)
 	}
 }
@@ -78,7 +78,7 @@ func TestGetTemplateEngineByKeyBullshit(t *testing.T) {
 		t.Fatalf("bullshit key should not find any templateengine")
 	}
 
-	if reflect.TypeOf(engine).Elem().Name() != reflect.TypeOf(GoTemplateEngine{}).Name() {
+	if reflect.TypeOf(engine).Elem().Name() != reflect.TypeFor[GoTemplateEngine]().Name() {
 		fatalWrongTemplateEngine(t)
 	}
 }

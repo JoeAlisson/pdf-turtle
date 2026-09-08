@@ -1,6 +1,6 @@
 package models
 
-import "encoding/json"
+import "encoding/json/v2"
 
 type RenderTemplateData struct {
 	HtmlTemplate *string `json:"htmlTemplate"`
@@ -14,7 +14,7 @@ type RenderTemplateData struct {
 
 	TemplateEngine string `json:"templateEngine,omitempty" default:"golang" enums:"golang,handlebars,django"`
 
-	RenderOptions RenderOptions `json:"options,omitempty"`
+	RenderOptions RenderOptions `json:"options"`
 } // @name RenderTemplateData
 
 func (d *RenderTemplateData) HasHeaderOrFooterHtml() bool {

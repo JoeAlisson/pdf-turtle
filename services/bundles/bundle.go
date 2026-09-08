@@ -2,7 +2,7 @@ package bundles
 
 import (
 	"archive/zip"
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"io"
 	"mime/multipart"
@@ -147,7 +147,7 @@ func (b *Bundle) GetOptions() models.RenderOptions {
 	}
 	defer f.Close()
 
-	json.NewDecoder(f).Decode(&opt)
+	_ = json.UnmarshalRead(f, &opt)
 
 	opt.IsBundle = true
 

@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"io"
 	"math/rand/v2"
@@ -42,7 +42,7 @@ func writeJson(ctx context.Context, w http.ResponseWriter, data any) error {
 		return nil
 	}
 
-	err := json.NewEncoder(w).Encode(data)
+	err := json.MarshalWrite(w, data)
 
 	if err != nil {
 		log.Ctx(ctx).Error().Err(err).Msg("cant write json to body")

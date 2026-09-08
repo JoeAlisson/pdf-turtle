@@ -5,7 +5,7 @@ package handlers_test
 import (
 	"bytes"
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"mime"
 	"mime/multipart"
 	"net/http"
@@ -98,7 +98,7 @@ func TestSaveHtmlBundleHandler(t *testing.T) {
 			Name string `json:"name"`
 		}{}
 
-		_ = json.NewDecoder(resp.Body).Decode(&response)
+		_ = json.UnmarshalRead(resp.Body, &response)
 		if response.Name == "" {
 			t.Error("expected Name to be set")
 		}
@@ -159,7 +159,7 @@ func TestSaveHtmlBundleHandler(t *testing.T) {
 		response := struct {
 			Name string `json:"name"`
 		}{}
-		_ = json.NewDecoder(resp.Body).Decode(&response)
+		_ = json.UnmarshalRead(resp.Body, &response)
 		if response.Name == "" {
 			t.Fatalf("expected id to be set")
 		}
@@ -191,7 +191,7 @@ func TestSaveHtmlBundleHandler(t *testing.T) {
 			t.Errorf("expected status code to be 200, got %d", resp.StatusCode)
 		}
 
-		_ = json.NewDecoder(resp.Body).Decode(&response)
+		_ = json.UnmarshalRead(resp.Body, &response)
 
 		name := response.Name
 
@@ -462,7 +462,7 @@ func TestListHtmlBundleHandler(t *testing.T) {
 			Items []bundles.Info `json:"items"`
 		}{}
 
-		_ = json.NewDecoder(resp.Body).Decode(&response)
+		_ = json.UnmarshalRead(resp.Body, &response)
 
 		if len(response.Items) != 2 {
 			t.Fatalf("expected items to be 2, got %d", len(response.Items))

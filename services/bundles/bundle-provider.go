@@ -11,7 +11,7 @@ import (
 type CleanupFunc = func()
 
 type InfoList struct {
-	Items []Info
+	Items []Info `json:"items"`
 }
 
 type InfoReader interface {

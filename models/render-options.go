@@ -22,7 +22,7 @@ type RenderOptions struct {
 	ExcludeBuiltinStyles bool `json:"excludeBuiltinStyles,omitempty" default:"false"`
 
 	// page size in mm; overrides page format
-	PageSize   PageSize `json:"pageSize,omitempty"`
+	PageSize   PageSize `json:"pageSize"`
 	PageFormat string   `json:"pageFormat,omitempty" default:"A4" enums:"A0,A1,A2,A3,A4,A5,A6,Letter,Legal"`
 
 	// margins in mm; fallback to default if null

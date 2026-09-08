@@ -13,7 +13,7 @@ func ReflectDefaultValues[S any](s *S) *S {
 
 	count := t.NumField()
 
-	for i := 0; i < count; i++ {
+	for i := range count {
 		f := t.Field(i)
 
 		defaultStr, ok := f.Tag.Lookup("default")
