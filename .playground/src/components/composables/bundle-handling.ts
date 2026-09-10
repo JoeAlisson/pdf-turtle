@@ -153,7 +153,7 @@ export function useBundleHandling(
         baseURL: settings.serverUrl || undefined,
         headers: !settings.secret ? undefined : { Authorization: `Bearer ${settings.secret}` }
       })
-      return res.Items
+      return res.items
     } catch (e) {
       bundleError.value = `Error loading bundles info: ${e}`
     }
